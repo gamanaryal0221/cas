@@ -10,4 +10,5 @@ import vcp.np.cas.domains.ClientService;
 @Repository
 public interface ClientServiceRepository extends JpaRepository<ClientService, Long> {
     Optional<ClientService> findByRequestHost(String requestHost);
+    Optional<ClientService> findByClientIdAndServiceId(Long clientId, Long serviceId);
 }

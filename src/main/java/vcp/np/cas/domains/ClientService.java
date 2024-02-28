@@ -16,16 +16,24 @@ import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "client_service",
-	uniqueConstraints = {
-			@UniqueConstraint(columnNames = {"client_id", "service_id"}, name = "client_service_unique"),
-	        @UniqueConstraint(columnNames = "request_host")
-	}
+uniqueConstraints = {
+		@UniqueConstraint(columnNames = {"client_id", "service_id"}, name = "client_service_unique"),
+		@UniqueConstraint(columnNames = "request_host")
+		}
 )
 public class ClientService {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
+
+    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp createdAt;
+
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    private Timestamp updatedAt;
+    
 
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
@@ -37,12 +45,7 @@ public class ClientService {
 
     @Column(name = "request_host", nullable = false, unique = true)
     private String requestHost;
-
-    @Column(name = "created_at", nullable = false)
-    private Timestamp createdAt;
-
-    @Column(name = "updated_at")
-    private Timestamp updatedAt;
+    
 
 	@PrePersist
 	protected void onCreate() {
@@ -57,6 +60,9 @@ public class ClientService {
     public ClientService() {
     }
 
+	public Long getId() {
+		return id;
+	}
 
 	public Client getClient() {
 		return client;
@@ -64,5 +70,9 @@ public class ClientService {
 
 	public Service getService() {
 		return service;
+	}
+
+	public String getRequestHost() {
+		return requestHost;
 	}
 }

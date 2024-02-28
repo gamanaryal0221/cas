@@ -21,10 +21,18 @@ public class Client {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false)
 	private Long id;
 
-	@Column(name = "soft_deleted")
+	@Column(name = "soft_deleted", columnDefinition = "BIT DEFAULT 0")
 	private boolean softDeleted = false;
+
+    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp createdAt;
+
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    private Timestamp updatedAt;
+    
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
@@ -39,17 +47,12 @@ public class Client {
 	@JoinColumn(name = "parent_client_id", referencedColumnName = "id")
 	private Client parentClient;
 
-	@Column(name = "is_google_authentication_enabled", nullable = false)
+	@Column(name = "is_google_authentication_enabled", nullable = false, columnDefinition = "BIT DEFAULT 0")
 	private boolean isGoogleAuthenticationEnabled = false;
 
-	@Column(name = "is_credential_authentication_enabled", nullable = false)
+	@Column(name = "is_credential_authentication_enabled", nullable = false, columnDefinition = "BIT DEFAULT 1")
 	private boolean isCredentialAuthenticationEnabled = true;
 
-    @Column(name = "created_at", nullable = false)
-    private Timestamp createdAt;
-
-    @Column(name = "updated_at")
-    private Timestamp updatedAt;
 
 	@PrePersist
 	protected void onCreate() {

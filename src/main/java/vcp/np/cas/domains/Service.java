@@ -18,9 +18,17 @@ public class Service {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
-    @Column(name = "soft_deleted")
+    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp createdAt;
+
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    private Timestamp updatedAt;
+    
+
+    @Column(name = "soft_deleted", columnDefinition = "BIT DEFAULT 0")
     private boolean softDeleted = false;
 
     @Column(name = "name", nullable = false, unique = true)
@@ -28,12 +36,7 @@ public class Service {
 
     @Column(name = "display_name", length = 500)
     private String displayName;
-
-    @Column(name = "created_at", nullable = false)
-    private Timestamp createdAt;
-
-    @Column(name = "updated_at")
-    private Timestamp updatedAt;
+    
 
 	@PrePersist
 	protected void onCreate() {
@@ -53,5 +56,8 @@ public class Service {
 		return id;
 	}
 
+	public String getDisplayName() {
+		return displayName;
+	}
     
 }

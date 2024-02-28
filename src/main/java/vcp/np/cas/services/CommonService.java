@@ -1,6 +1,5 @@
 package vcp.np.cas.services;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -10,13 +9,20 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import vcp.np.cas.domains.ClientService;
 import vcp.np.cas.domains.ClientServiceTheme;
+import vcp.np.cas.domains.ServiceSettings;
+import vcp.np.cas.domains.User;
+import vcp.np.cas.domains.UserClientService;
+import vcp.np.cas.domains.UserEmail;
 import vcp.np.cas.repositories.ClientServiceRepository;
 import vcp.np.cas.repositories.ClientServiceThemeRepository;
+import vcp.np.cas.repositories.ServiceSettingsRepository;
+import vcp.np.cas.repositories.UserClientServiceRepository;
+import vcp.np.cas.repositories.UserEmailRepository;
 import vcp.np.cas.repositories.UserRepository;
 import vcp.np.cas.utils.Constants;
+
 
 @Service
 public class CommonService {
@@ -25,53 +31,51 @@ public class CommonService {
 	public UserRepository userRepository;
 
 	@Autowired
+	public UserEmailRepository userEmailRepository;
+
+	@Autowired
 	public ClientServiceRepository clientServiceRepository;
 
 	@Autowired
+	public UserClientServiceRepository userClientServiceRepository;
+
+	@Autowired
 	public ClientServiceThemeRepository clientServiceThemeRepository;
+
+	@Autowired
+	public ServiceSettingsRepository serviceSettingsRepository;
 	
-	public ClientService getClientServiceDetail(HttpServletRequest request) {
+	
+	public ClientService getClientServiceDetail(URL url) {
 	    System.out.println("Fetching client-service detail...");
-	    System.out.println(request);
 	    ClientService clientService = null;
 
-	    if (request != null) {
+	    if (url != null) {
 
 	        try {
-	            String hostUrl = request.getParameter(Constants.HOST_URL);
-	            System.out.println("hostUrl: " + hostUrl);
+                String requestHost = url.getHost();
+                System.out.println("requestHost: " + requestHost);
 
-	            if (hostUrl != null && !hostUrl.isEmpty()) {
-	                URL url = new URL(hostUrl);
+                Optional<ClientService> optionalClientService = clientServiceRepository.findByRequestHost(requestHost);
+                clientService = optionalClientService.orElse(null);
+            	System.out.println("clientService: " + clientService);
 
-	                String requestHost = url.getHost();
-	                System.out.println("requestHost: " + requestHost);
+                if (clientService == null) {
+                    System.out.println("Could not find requestHost: " + requestHost);
+                }
 
-	                Optional<ClientService> optionalClientService = clientServiceRepository.findByRequestHost(requestHost);
-	                clientService = optionalClientService.orElse(null);
-	            	System.out.println("clientService: " + clientService);
-
-	                if (clientService == null) {
-	                    System.out.println("Could not find requestHost: " + requestHost);
-	                }
-
-	            } else {
-	                System.out.println("Host URL is empty or null.");
-	            }
-
-	        } catch (MalformedURLException e) {
-	            System.out.println("Malformed hostUrl: " + e.getMessage());
 	        } catch (Exception e) {
 	            e.printStackTrace();
 	            System.out.println("Error occurred in getClientServiceDetail: " + e.getMessage());
 	        }
 
 	    } else {
-	        System.out.println("Request is null.");
+	        System.out.println("URL is null.");
 	    }
 
 	    return clientService;
 	}
+	
 	
 	public Map<String, String> getClientServiceTheme(Long clientId, Long serviceId) {
 	    System.out.println("Fetching client-service theme [clientId:" + clientId + ",serviceId:" + serviceId + "]...");
@@ -116,18 +120,127 @@ public class CommonService {
 				}
 				
 			}else {
-				System.out.println("Not found any theme for client-service[clientId:" + clientId + ",serviceId:" + serviceId + "]");
+				System.out.println("Not Found: Themes of the client-service[clientId:" + clientId + ",serviceId:" + serviceId + "]");
 			}
 		}
 		
 		
 		if (clientServiceThemeMap.isEmpty()) {
-			System.out.println("Setting default theme");
+			System.out.println("Setting default theme ...");
 			
-		    clientServiceThemeMap.put(Constants.LOGO_URL, "https://img.freepik.com/free-vector/bird-colorful-logo-gradient-vector_343694-1365.jpg?size=338&ext=jpg&ga=GA1.1.1412446893.1705143600&semt=sph");
+		    clientServiceThemeMap.put(Constants.LOGO_URL, "https://media.istockphoto.com/id/1313644269/vector/gold-and-silver-circle-star-logo-template.jpg?s=612x612&w=0&k=20&c=hDqCI9qTkNqNcKa6XS7aBim7xKz8cZbnm80Z_xiU2DI=");
 		    clientServiceThemeMap.put(Constants.BACKGROUND_IMAGE_URL, "https://img.freepik.com/free-photo/autumn-leaf-falling-revealing-intricate-leaf-vein-generated-by-ai_188544-9869.jpg?size=626&ext=jpg&ga=GA1.1.1412446893.1705017600&semt=ais");
 		}
 		
 		return clientServiceThemeMap;
+	}
+	
+	
+	public User fetchTheUserFromDb(String usernameOrEmail) {
+		User user = null;
+		
+		user = getUserByUsername(usernameOrEmail);
+		if (user == null) {
+			UserEmail userEmail = getUserEmail(usernameOrEmail, true);
+			if (userEmail != null) user = userEmail.getUser();
+		}
+		
+		return user;
+	}
+	
+	
+	public User getUserByUsername(String username) {
+		User user = null;
+		
+		if (username != null) {
+			try {
+				Optional<User> optionalUser = userRepository.findByUsername(username);
+				user = optionalUser.orElse(null);
+			}catch(Exception e) {
+				e.printStackTrace();
+	            System.out.println("Error occurred in getUserByUsername: " + e.getMessage());
+			}
+		}
+		
+		System.out.println("User[username:" + username + ((user != null)? "]":"] not") + " found in the db");
+		return user;
+	}
+
+	
+	public UserEmail getUserEmail(String email, boolean searchForPrimaryOnly) {
+		UserEmail userEmail = null;
+		
+		if (email != null) {
+			try {
+				Optional<UserEmail> optionalUserEmail = null;
+				if (searchForPrimaryOnly) {
+					optionalUserEmail = userEmailRepository.findByEmailAndIsPrimary(email, true);
+				}else {
+					optionalUserEmail = userEmailRepository.findByEmail(email);
+				}
+				
+				userEmail = optionalUserEmail.orElse(null);
+			}catch(Exception e) {
+				e.printStackTrace();
+	            System.out.println("Error occurred in getUserEmail: " + e.getMessage());
+			}
+		}
+		
+		System.out.println("User[email:" + email + ((userEmail != null)? "]":"] not") + " found in the db");
+		return userEmail;
+	}
+
+
+	public UserClientService getUserClientService(Long userId, Long clientServiceId) {
+		UserClientService userClientService = null;
+		
+		if (userId != null && clientServiceId != null) {
+			
+	        try {
+
+    			Optional<UserClientService> optionalUserClientService = userClientServiceRepository.findByUserIdAndClientServiceId(userId, clientServiceId);
+    			userClientService = optionalUserClientService.orElse(null);
+                if (userClientService == null) {
+                    System.out.println("Could not find access of user[id:" + userId + "] on clientService[id:" + clientServiceId + "]");
+                }
+
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            System.out.println("Error occurred in getUserClientServiceDetail: " + e.getMessage());
+	        }
+			
+		}else {
+            System.out.println("user:" + userId + " or clientServiceId:" + clientServiceId + " is null");
+		}
+		
+		return userClientService;
+	}
+
+
+	public String getLoginSuccessPathOfService(Long serviceId) {
+		String loginSuccessPath = null;
+		
+		if (serviceId != null) {
+			
+	        try {
+
+    			Optional<ServiceSettings> optionalServiceSettings = serviceSettingsRepository.findByServiceId(serviceId);
+    			ServiceSettings serviceSettings = optionalServiceSettings.orElse(null);
+                if (serviceSettings == null) {
+                    System.out.println("Could not find settings of service[id:" + serviceId + "]");
+                }else {
+                	loginSuccessPath = serviceSettings.getLoginSuccessPath();
+                }
+
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            System.out.println("Error occurred in getLoginSuccessPathOfService: " + e.getMessage());
+	        }
+			
+		}else {
+            System.out.println("serviceId:" + serviceId + " is null");
+		}
+		
+		return (loginSuccessPath != null && !loginSuccessPath.isEmpty())? loginSuccessPath:"";
 	}
 }
