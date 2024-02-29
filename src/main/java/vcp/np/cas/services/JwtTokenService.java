@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -55,6 +56,7 @@ public class JwtTokenService {
             
             
             expirationMap.put(JwtTokenPurpose.LOGIN_SUCCESSFUL.getCode(), (3600l * 1000));
+            expirationMap.put(JwtTokenPurpose.FORCED_PASSWORD_RESET.getCode(), (3600l * 1000));
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -73,12 +75,15 @@ public class JwtTokenService {
 	}
 	
 
-	public String generateToken(JwtTokenPurpose jwtTokenPurpose, UserClientService userClientService) {
+	public String generateToken(JwtTokenPurpose jwtTokenPurpose, String hostUrl, UserClientService userClientService, Map<String, Object> extraData) {
 		if (userClientService != null) {
+			
+			String log = "jwt token purpose: '" + jwtTokenPurpose.getCode() + "' for user[id: " + userClientService.getUser().getId() + "] on client-service[id: " + userClientService.getId() + "]";
+			System.out.println("Generating " + log);
 			
 			try {
 				
-				Map<String, Object> jwtMap = getJwtMap(jwtTokenPurpose, userClientService);
+				Map<String, Object> jwtMap = getJwtMap(jwtTokenPurpose, hostUrl, userClientService, extraData);
 				
 				PrivateKey privateKey = keyPair.getPrivate();
 
@@ -90,22 +95,32 @@ public class JwtTokenService {
 		                .signWith(privateKey, SignatureAlgorithm.RS256)
 		                .addClaims(jwtMap);
 
-		        return builder.compact();
+		        String jwtToken = builder.compact();
+		        
+		        if (jwtToken == null || jwtToken.isEmpty()) {
+					System.out.println("Could not generate " + log);
+		        	return null;
+		        }else {
+					System.out.println("Successfully generated " + log);
+					System.out.println("jwtToken: " + jwtToken);
+		        	return jwtToken;
+		        }
+		        
 				
 			}catch(Exception e) {
 				e.printStackTrace();
-				System.out.println("Could not generate jwt token");
+				System.out.println("Could not generate " + log);
 				return null;
 			}
 			
 		}else {
-			System.out.println("Recived null data to generate jwt token");
+			System.out.println("Recived null data to generate jwt token purpose: '" + jwtTokenPurpose.getCode() + "' on hostUrl: '" + hostUrl + "'");
 			return null;
 		}
     }
 
 
-	private Map<String, Object> getJwtMap(JwtTokenPurpose jwtTokenPurpose, UserClientService userClientService) {
+	private Map<String, Object> getJwtMap(JwtTokenPurpose jwtTokenPurpose, String hostUrl, UserClientService userClientService, Map<String, Object> extraData) {
 		Map<String, Object> jwtMap = new HashMap<String, Object>();
 
         jwtMap.put(Constants.JwtToken.PURPOSE, jwtTokenPurpose.getCode());
@@ -116,9 +131,34 @@ public class JwtTokenService {
 		jwtMap.put(Constants.JwtToken.LAST_NAME, user.getLastName());
 		
 		jwtMap.put(Constants.JwtToken.CLIENT_DISPLAY_NAME, userClientService.getClient().getDisplayName());
-		jwtMap.put(Constants.JwtToken.REQUEST_HOST, userClientService.getClientService().getRequestHost());
+		
+		if (hostUrl != null && hostUrl.isEmpty()) {
+			jwtMap.put(Constants.JwtToken.HOST_URL, userClientService.getClientService().getRequestHost());
+		}else {
+			jwtMap.put(Constants.JwtToken.REQUEST_HOST, userClientService.getClientService().getRequestHost());
+		}
+		
+		if(extraData != null) jwtMap.putAll(extraData);
         
 		return jwtMap;
 	}
 
+	
+	public Claims parseToken(String jwtToken) {
+		System.out.println("Parsing jwt token: " + jwtToken);
+        try {
+            PublicKey publicKey = keyPair.getPublic();
+
+            return Jwts.parserBuilder()
+                    .setSigningKey(publicKey)
+                    .build()
+                    .parseClaimsJws(jwtToken)
+                    .getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+    		System.out.println("Error encountered while parsing jwt token: " + jwtToken);
+            return null;
+        }
+    }
+	
 }

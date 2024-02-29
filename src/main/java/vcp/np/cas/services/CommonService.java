@@ -75,6 +75,35 @@ public class CommonService {
 
 	    return clientService;
 	}
+
+	public ClientService getClientServiceDetail(String requestHost) {
+	    System.out.println("Fetching client-service detail...");
+	    ClientService clientService = null;
+
+	    if (requestHost != null && !requestHost.isEmpty()) {
+
+	        try {
+                System.out.println("requestHost: " + requestHost);
+
+                Optional<ClientService> optionalClientService = clientServiceRepository.findByRequestHost(requestHost);
+                clientService = optionalClientService.orElse(null);
+            	System.out.println("clientService: " + clientService);
+
+                if (clientService == null) {
+                    System.out.println("Could not find requestHost: " + requestHost);
+                }
+
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            System.out.println("Error occurred in getClientServiceDetail: " + e.getMessage());
+	        }
+
+	    } else {
+	        System.out.println("requestHost: '" + requestHost + "' is not valid.");
+	    }
+
+	    return clientService;
+	}
 	
 	
 	public Map<String, String> getClientServiceTheme(Long clientId, Long serviceId) {

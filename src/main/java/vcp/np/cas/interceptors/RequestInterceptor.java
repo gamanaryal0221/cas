@@ -34,6 +34,10 @@ public class RequestInterceptor implements HandlerInterceptor{
         String hostUrl = request.getParameter(Constants.HOST_URL);
         System.out.println("Request[method: " + requestMethod + ", uri: " + requestUri + ", hostUrl: " + hostUrl + "]");
         
+        if (Constants.Request.Uri.PASSWORD_RESET.equalsIgnoreCase(requestUri)) {
+        	return true;
+        }
+        
 		boolean isGenuineRequest = false;
 
     	ModelAndView modelAndView = new ModelAndView();
@@ -42,7 +46,8 @@ public class RequestInterceptor implements HandlerInterceptor{
         try {
         	
         	if (hostUrl == null || hostUrl.isEmpty()) {
-        		modelAndView.addAllObjects(Helper.error("Malformed URL", "Please try with valid URL"));
+    			modelAndView.addAllObjects(commonService.getClientServiceTheme(null, null));
+        		modelAndView.addAllObjects(Helper.error(Constants.Error.Title.MALFORMED_URL, Constants.Error.Message.TRY_WITH_VALID_URL));
             }else {
         		        		
         		URL url = Helper.parseUrl(hostUrl);
@@ -50,7 +55,7 @@ public class RequestInterceptor implements HandlerInterceptor{
                 modelAndView.addObject(Constants.CLIENT_DISPLAY_NAME, (clientService != null) ? clientService.getClient().getDisplayName() : null);
         		
         		if (clientService == null) {
-            		modelAndView.addAllObjects(Helper.error("Malformed URL", "Please try with valid URL"));
+            		modelAndView.addAllObjects(Helper.error(Constants.Error.Title.MALFORMED_URL, Constants.Error.Message.TRY_WITH_VALID_URL));
         			modelAndView.addAllObjects(commonService.getClientServiceTheme(null, null));
         		}else {
 

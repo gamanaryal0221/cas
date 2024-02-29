@@ -1,7 +1,6 @@
 package vcp.np.cas.services;
 
 import java.sql.Timestamp;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,6 +13,8 @@ import vcp.np.cas.repositories.custom.CustomQueries;
 import vcp.np.cas.services.AuthenticationService.PasswordDetails;
 import vcp.np.cas.utils.Constants;
 import vcp.np.cas.utils.enums.JwtTokenPurpose;
+import vcp.np.cas.utils.Constants.Error;
+import vcp.np.cas.utils.Constants.Error.Message;
 
 @Service
 public class LoginService {
@@ -32,7 +33,7 @@ public class LoginService {
 	public CustomQueries customQueries;
 	
 	
-	public Map<String, Object> loginUsingCredentials(Long clientId, Long serviceId, Long clientServiceId, String username, String password) throws Exception {
+	public Map<String, Object> loginUsingCredentials(String hostUrl, Long clientId, Long serviceId, Long clientServiceId, String username, String password) throws Exception {
 		Map<String, Object> loginData = new HashMap<String, Object>();
 		
 		Timestamp loginTimeStamp = new Timestamp(System.currentTimeMillis());
@@ -41,14 +42,14 @@ public class LoginService {
     	// Verifying user's existence in the database
     	User user = commonService.fetchTheUserFromDb(username);
     	if (user == null) {
-    		loginData.put(Constants.ERROR_MESSAGE, "Provided credentials is not determined to be authentic.");
+    		loginData.put(Error.Message.KEY, Message.CREDENTIAL_IS_NOT_AUTHENTIC);
     		return loginData;
     	}
     	Long userId = user.getId();
     	
     	// Verifying user's credentials
     	if (!doesCredentialMatch(user, password)) {
-    		loginData.put(Constants.ERROR_MESSAGE, "Provided credentials is not determined to be authentic.");
+    		loginData.put(Error.Message.KEY, Message.CREDENTIAL_IS_NOT_AUTHENTIC);
     		return loginData;
     	}
     	
@@ -56,30 +57,36 @@ public class LoginService {
     	UserClientService userClientService = commonService.getUserClientService(userId, clientServiceId);
     	System.out.println("Does user[id" + userId + "] have access on client-service[id:" + clientServiceId + "]?\n >> " + (userClientService != null));
     	if (userClientService == null) {
-    		loginData.put(Constants.ERROR_MESSAGE, "Provided credentials is not determined to be authentic.");
+    		loginData.put(Error.Message.KEY, Message.CREDENTIAL_IS_NOT_AUTHENTIC);
     		return loginData;
     	}
     	
     	if (!userClientService.isActive()) {
     		Integer daysOfInactivity = customQueries.getUserInactivityDays(userId, clientId, serviceId, loginTimeStamp);
         	if (daysOfInactivity != 0) {
-        		loginData.put(Constants.ERROR_MESSAGE, "Your account has been deactivated due to inactivity in " + daysOfInactivity + " day(s).");
+        		loginData.put(Error.Message.KEY, "Your account has been deactivated due to inactivity in " + daysOfInactivity + " day(s).");
         		return loginData;
         	}
     	}
     	
-    	if (customQueries.isUserPasswordExpired(userId, clientId, loginTimeStamp)) {
+    	Integer daysSinceLastPasswordChange = customQueries.getDaysSinceLastPasswordChange(userId, clientId, loginTimeStamp);
+    	if (daysSinceLastPasswordChange != 0) {
     		loginData.put(Constants.IS_PASSWORD_EXPIRED, true);
+    		
+    		Map<String, Object> extraData = new HashMap<String, Object>();
+    		extraData.put(Constants.JwtToken.DAYS_SINCE_LAST_PASSWORD_CHANGE, daysSinceLastPasswordChange);
+    		
+    		String jwtToken = jwtTokenService.generateToken(JwtTokenPurpose.FORCED_PASSWORD_RESET, hostUrl, userClientService, extraData);
+        	if (jwtToken == null) throw new Exception("Could not generate jwt token");
+      
+    		loginData.put(Constants.JwtToken.KEY, jwtToken);
     		return loginData;
-
     	}
     	
     	// Generating JWT token for user to access the respective client's application
-    	String jwtToken = jwtTokenService.generateToken(JwtTokenPurpose.LOGIN_SUCCESSFUL, userClientService);
-    	System.out.println(jwtToken);
-    	if (jwtToken == null || jwtToken.isEmpty()) {
-    		throw new Exception("Could not generate jwt token for user[id: " + userId + "] on client-service[clientId: " + clientId + ", serviceId: " + serviceId + "]");
-    	}
+    	String jwtToken = jwtTokenService.generateToken(JwtTokenPurpose.LOGIN_SUCCESSFUL, hostUrl, userClientService, null);
+    	if (jwtToken == null) throw new Exception("Could not generate jwt token");
+		loginData.put(Constants.JwtToken.KEY, jwtToken);
     	
     	
     	customQueries.updateTheUserLoginTime(userId, clientId, serviceId, loginTimeStamp);

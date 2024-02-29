@@ -37,7 +37,10 @@ public class CustomQueries {
             
             Object result = query.getSingleResult();
             if (result instanceof Number) {
-                return ((Number) result).intValue();
+            	Integer days = ((Number) result).intValue();
+            	System.out.println("Is user[id: " + userId + "] active on client-service[clientId: " + clientId + ", serviceId: " + serviceId + "]?\n>> " + (days == 0));
+            	
+                return days;
             } else {
                 throw new IllegalStateException("Query result is not a number");
             }
@@ -83,12 +86,12 @@ public class CustomQueries {
 
 
     @Transactional(readOnly = true)
-    public boolean isUserPasswordExpired(Long userId, Long clientId, Timestamp loginTimeStamp) {
+    public Integer getDaysSinceLastPasswordChange(Long userId, Long clientId, Timestamp loginTimeStamp) {
     	try {
             String queryStr = ""
             		+ "select "
             		+ "	case when timestampdiff(day, COALESCE(u.last_password_changed_at, now()), :loginTimeStamp) < css.password_expiration_period then 0 "
-            		+ "	else 1 end "
+            		+ "	else timestampdiff(day, COALESCE(u.last_password_changed_at, now()), :loginTimeStamp) end "
             		+ "from user_client_service ucs "
             		+ "	inner join client_service cs on cs.id = ucs.client_service_id "
             		+ "	inner join client_settings css on css.client_id = cs.client_id "
@@ -104,12 +107,10 @@ public class CustomQueries {
             Object result = query.getSingleResult();
             if (result instanceof Number) {
             	
-            	if (((Number) result).intValue() == 1) {
-                	System.out.println("User[id: " + userId + "]'s password has been expired on client[id: " + clientId + "]");
-                	return true;
-            	}else {
-                	return false;
-            	}
+            	Integer days = ((Number) result).intValue();
+            	System.out.println("Has the user[id: " + userId + "]'s password expired on client[id: " + clientId + "]?\n>> " + (days == 0));
+            	
+                return days;
             	
             } else {
                 throw new IllegalStateException("Query result is not a number");
@@ -117,7 +118,7 @@ public class CustomQueries {
         } catch (Exception ex) {
             ex.printStackTrace();
         	System.out.println("Error encountered while checking password expiration of user[id: " + userId + "] on client[id: " + clientId + "]");
-            return false;
+            return 0;
         }
     }
 

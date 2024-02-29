@@ -15,7 +15,7 @@ public class Constants {
 			public static String LOGIN = "/login";
 			public static String ERROR = "/error";
 			public static String PASSWORD = "/password";
-			public static String PASSWORD_CHANGE = "/password/change";
+			public static String PASSWORD_RESET = "/password/reset";
 
 			private static List<String> ALL = new ArrayList<String>(List.of(LOGIN, PASSWORD));
 			
@@ -36,7 +36,7 @@ public class Constants {
 		public static String ERROR = "error";
 		public static String LOGIN = "login";
 		public static String FORGOT_PASSWORD = "forgot_password";
-		public static String RESET_PASSWORD = "reset_password";
+		public static String PASSWORD_RESET = "password_reset";
 	}
 	
 
@@ -53,6 +53,30 @@ public class Constants {
 		public static String CLIENT_DISPLAY_NAME = "clientDisplayName";
 
 		public static String REQUEST_HOST = "requestHost";
+		public static String HOST_URL = "hostUrl";
+		
+		public static String DAYS_SINCE_LAST_PASSWORD_CHANGE = "daysSinceLastPasswordChange";
+	}
+	
+
+	public class Error {
+
+		public class Title {
+			public static String KEY = "errorTitle";
+
+			public static String TECHNICAL_ERROR = "Technical Error";
+			public static String MALFORMED_URL = "Malformed URL";
+		}
+		
+
+		public class Message {
+			public static String KEY = "errorMessage";
+
+			public static String SMTH_WENT_WRONG = "Something went wrong. Please try again.";
+			public static String TRY_WITH_VALID_URL = "Please try with valid URL";
+			public static String CREDENTIAL_IS_NOT_AUTHENTIC = "Provided credentials is not determined to be authentic.";
+			public static String COULD_NOT_PROCESS = "Sorry, your request could not be processed.";
+		}
 	}
 	
 	public static String REQUEST_HOST = "requestHost";
@@ -61,9 +85,6 @@ public class Constants {
 	
 	public static String MODEL_AND_VIEW = "modelAndView";
 	
-	public static String ERROR_TITLE = "errorTitle";
-	public static String ERROR_MESSAGE = "errorMessage";
-
 	public static String CLIENT_ID = "clientId";
 	public static String CLIENT_DISPLAY_NAME = "clientDisplayName";
 
@@ -82,5 +103,7 @@ public class Constants {
 	public static String LOGIN_SUCCESS_PATH = "loginSuccessPath";
 
 	public static String IS_PASSWORD_EXPIRED = "isPasswordExpired";
+	
+	public static String PAGE_DESCRIPTION = "pageDescription";
 
 }

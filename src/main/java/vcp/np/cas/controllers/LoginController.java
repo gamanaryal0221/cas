@@ -52,22 +52,23 @@ public class LoginController {
     	
         model.addAttribute(Constants.USERNAME, username);
         
+        String hostUrl = (String) modelAndViewMap.getOrDefault(Constants.HOST_URL, "");
         Long clientId = (Long) modelAndViewMap.get(Constants.CLIENT_ID);
         Long serviceId = (Long) modelAndViewMap.get(Constants.SERVICE_ID);
         Long clientServiceId = (Long) modelAndViewMap.get(Constants.CLIENTSERVICE_ID);
         
-        if (clientId == null || serviceId == null) {
+        if (clientId == null || serviceId == null || hostUrl.isEmpty()) {
         	model.addAllAttributes(Helper.error(null, null));
         	return Constants.Templates.ERROR;
         }
         
         try {
 
-            Map<String, Object> loginData = loginService.loginUsingCredentials(clientId, serviceId, clientServiceId, username, password);
+            Map<String, Object> loginData = loginService.loginUsingCredentials(hostUrl, clientId, serviceId, clientServiceId, username, password);
             
             if ((boolean) loginData.getOrDefault(Constants.IS_LOGIN_SUCCESSFUL, false)) {
             	
-            	URL url = Helper.parseUrl(request.getParameter(Constants.HOST_URL));
+            	URL url = Helper.parseUrl(hostUrl);
             	
             	String redirectionUrl = "";
             	if (url != null) redirectionUrl = url.getProtocol().toString() + "://" + url.getHost().toString();
@@ -75,7 +76,12 @@ public class LoginController {
             	String port = (url.getPort() != -1)? (String.valueOf(url.getPort())):"";
             	if (!port.isEmpty()) redirectionUrl = redirectionUrl + ":" + port;
             	
-            	if (redirectionUrl == null || redirectionUrl.isEmpty()) redirectionUrl = (String) loginData.get(Constants.HOST_URL);
+            	if (redirectionUrl == null || redirectionUrl.isEmpty()) {
+            		String requestHost = (String) loginData.getOrDefault(Constants.REQUEST_HOST, "");
+            		if (!requestHost.isEmpty()) {
+            			redirectionUrl = "https://" + requestHost;
+            		}
+            	}
             	System.out.println("Redirecting to url: " + redirectionUrl);
             	
             	if (redirectionUrl == null || redirectionUrl.isEmpty()) {
@@ -89,12 +95,12 @@ public class LoginController {
             }else {
             	
             	if ((boolean) loginData.getOrDefault(Constants.IS_PASSWORD_EXPIRED, false)) {
-                	System.out.println("Redirecting to password change page");
-            		httpServletResponse.sendRedirect(Constants.Request.Uri.PASSWORD_CHANGE + "?" + Constants.HOST_URL + "=" + request.getParameter(Constants.HOST_URL));
+                	System.out.println("Redirecting to password reset page");
+            		httpServletResponse.sendRedirect(Constants.Request.Uri.PASSWORD_RESET + "?" + Constants.JwtToken.KEY + "=" + ((String) loginData.getOrDefault(Constants.JwtToken.KEY, "")));
             		return null;
             	}else {
                 	model.addAllAttributes(loginData);
-            		System.out.println("Could not login username:" + username + " on " + modelAndViewMap.getOrDefault(Constants.HOST_URL, ""));
+            		System.out.println("Could not login username:" + username + " on " + hostUrl);
             		return Constants.Templates.LOGIN;
             	}
             	

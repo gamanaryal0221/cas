@@ -9,6 +9,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.lang.System;
+import vcp.np.cas.utils.Constants.Error;
 
 public class Helper {
 	
@@ -62,8 +63,8 @@ public class Helper {
 	
 	public static Map<String, String> error(String title, String message){
 		Map<String, String> errorMap = new HashMap<String, String>();
-		errorMap.put(Constants.ERROR_TITLE, (title != null && !title.isEmpty())? title:"Technical Error");
-		errorMap.put(Constants.ERROR_MESSAGE, (message != null && !message.isEmpty())? message:"Something went wrong. Please try again.");
+		errorMap.put(Error.Title.KEY, (title != null && !title.isEmpty())? title:Error.Title.TECHNICAL_ERROR);
+		errorMap.put(Error.Message.KEY, (message != null && !message.isEmpty())? message:Error.Message.SMTH_WENT_WRONG);
 		return errorMap;
 	}
 }

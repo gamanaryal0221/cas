@@ -73,6 +73,11 @@
 		<div id="cas-box">
 			<img th:src="${logoUrl}" th:alt="${clientDisplayName}">
 			<h4 th:text="${clientDisplayName}"></h4>
+			
+			
+			<h4 style="text-align: left;">Login</h4>
+			<p style="text-align: left; font-size: small; margin-bottom: 3em;">Welcome back<br>Please provide your credentials</p>
+
 
 			<!-- Display error message if authentication fails -->
 			<div style="color: red; font-size: small; margin-bottom: 1em;" th:if="${errorMessage}" class="error"
