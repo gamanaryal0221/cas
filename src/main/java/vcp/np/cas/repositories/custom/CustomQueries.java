@@ -2,6 +2,7 @@ package vcp.np.cas.repositories.custom;
 
 import java.sql.Timestamp;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,8 +54,11 @@ public class CustomQueries {
     
     
     @Transactional
-    public boolean updateTheUserLoginTime(Long userId, Long clientId, Long serviceId, Timestamp loginTimeStamp) {
+    @Async
+    public void updateTheUserLoginTime(Long userId, Long clientId, Long serviceId, Timestamp loginTimeStamp) {
         try {
+        	System.out.println("Updating: user[id: " + userId + "]'s logged in time for client-service[clientId: " + clientId + ", serviceId: " + serviceId + "]");
+
             String updateQueryStr = ""
             		+ "update user_client_service ucs "
             		+ "	inner join client_service cs on cs.id = ucs.client_service_id "
@@ -69,18 +73,11 @@ public class CustomQueries {
             updateQuery.setParameter("clientId", clientId);
             updateQuery.setParameter("serviceId", serviceId);
 
-            int rowsUpdated = updateQuery.executeUpdate();
-            if (rowsUpdated > 0) {
-            	System.out.println("User[id: " + userId + "]'s logged time updated for client-service[clientId: " + clientId + ", serviceId: " + serviceId + "]");
-            	return true;
-            }else {
-            	System.out.println("Could not update user[id: " + userId + "]'s logged time for client-service[clientId: " + clientId + ", serviceId: " + serviceId + "]");
-            	return false;
-            }
+        	System.out.println("Has the user[id: " + userId + "]'s logged time updated for client-service[clientId: " + clientId + ", serviceId: " + serviceId + "]?\n>> " + (updateQuery.executeUpdate() > 0));
+
         } catch (Exception ex) {
             ex.printStackTrace();
         	System.out.println("Error encountered while updating user[id: " + userId + "]'s logged time for client-service[clientId: " + clientId + ", serviceId: " + serviceId + "]");
-            return false;
         }
     }
 
@@ -122,4 +119,40 @@ public class CustomQueries {
         }
     }
 
+
+    @Transactional(readOnly = true)
+    public boolean isItInUserPasswordHistory(Long userId, String rawPassword) {
+    	try {
+            String queryStr = ""
+            		+ "select "
+            		+ "	case when exists( "
+            		+ "		select * "
+            		+ "		from user_password_history "
+            		+ "		where user_id = :userId "
+            		+ "			and password = sha2(concat(salt_value, :rawPassword) "
+            		+ "	) then true "
+            		+ "	else false end ";
+            
+            Query query = entityManager.createNativeQuery(queryStr);
+            query.setParameter("userId", userId);
+            query.setParameter("rawPassword", rawPassword);
+            
+            Object result = query.getSingleResult();
+            System.out.println(result);
+            if (result instanceof Number) {
+            	
+            	Integer days = ((Number) result).intValue();
+            	System.out.println("Is it in user[id: " + userId + "]'s password history?\n>> " + (days == 1));
+            	
+                return (days == 1);
+            	
+            } else {
+                throw new IllegalStateException("Query result is not a number");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        	System.out.println("Error encountered while checking user[id: " + userId + "]'s password history");
+            return false;
+        }
+    }
 }

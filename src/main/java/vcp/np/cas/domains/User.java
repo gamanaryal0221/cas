@@ -51,7 +51,7 @@ public class User {
     @JoinColumn(name = "employer_id", nullable = false)
     private Client employer;
 
-    @Column(name = "salt_value", nullable = false, length = 25)
+    @Column(name = "salt_value", nullable = false, length = 255)
     private String saltValue;
 
     @Column(name = "password", nullable = false, length = 500)

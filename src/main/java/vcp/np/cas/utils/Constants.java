@@ -66,6 +66,7 @@ public class Constants {
 
 			public static String TECHNICAL_ERROR = "Technical Error";
 			public static String MALFORMED_URL = "Malformed URL";
+			public static String FORBIDDEN = "Forbidden";
 		}
 		
 
@@ -73,9 +74,12 @@ public class Constants {
 			public static String KEY = "errorMessage";
 
 			public static String SMTH_WENT_WRONG = "Something went wrong. Please try again.";
-			public static String TRY_WITH_VALID_URL = "Please try with valid URL";
+			public static String TRY_WITH_VALID_URL = "Please try with valid URL.";
 			public static String CREDENTIAL_IS_NOT_AUTHENTIC = "Provided credentials is not determined to be authentic.";
 			public static String COULD_NOT_PROCESS = "Sorry, your request could not be processed.";
+			public static String REQUEST_IS_INVALID = "Please try with valid request.";
+			public static String CAN_NOT_SET_OLD_PASSWORD = "You can not set your old password.";
+
 		}
 	}
 	
@@ -99,6 +103,7 @@ public class Constants {
 	public static String POST_REQUEST_URL = "postRequestUrl";
 	
 	public static String IS_LOGIN_SUCCESSFUL = "isLoginSuccessFul";
+	public static String IS_PASSWORD_RESET_SUCCESSFUL = "isLoginSuccessFul";
 	
 	public static String LOGIN_SUCCESS_PATH = "loginSuccessPath";
 

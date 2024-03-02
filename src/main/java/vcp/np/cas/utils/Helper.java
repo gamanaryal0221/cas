@@ -8,7 +8,6 @@ import java.util.Map;
 import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.lang.System;
 import vcp.np.cas.utils.Constants.Error;
 
 public class Helper {
@@ -67,4 +66,6 @@ public class Helper {
 		errorMap.put(Error.Message.KEY, (message != null && !message.isEmpty())? message:Error.Message.SMTH_WENT_WRONG);
 		return errorMap;
 	}
+
+	
 }

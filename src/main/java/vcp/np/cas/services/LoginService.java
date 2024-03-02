@@ -10,11 +10,10 @@ import org.springframework.stereotype.Service;
 import vcp.np.cas.domains.User;
 import vcp.np.cas.domains.UserClientService;
 import vcp.np.cas.repositories.custom.CustomQueries;
-import vcp.np.cas.services.AuthenticationService.PasswordDetails;
 import vcp.np.cas.utils.Constants;
-import vcp.np.cas.utils.enums.JwtTokenPurpose;
 import vcp.np.cas.utils.Constants.Error;
 import vcp.np.cas.utils.Constants.Error.Message;
+import vcp.np.cas.utils.enums.JwtTokenPurpose;
 
 @Service
 public class LoginService {
@@ -48,14 +47,13 @@ public class LoginService {
     	Long userId = user.getId();
     	
     	// Verifying user's credentials
-    	if (!doesCredentialMatch(user, password)) {
+    	if (!authenticationService.doesCredentialMatch(user, password)) {
     		loginData.put(Error.Message.KEY, Message.CREDENTIAL_IS_NOT_AUTHENTIC);
     		return loginData;
     	}
     	
     	// Verifying user's access on the application
     	UserClientService userClientService = commonService.getUserClientService(userId, clientServiceId);
-    	System.out.println("Does user[id" + userId + "] have access on client-service[id:" + clientServiceId + "]?\n >> " + (userClientService != null));
     	if (userClientService == null) {
     		loginData.put(Error.Message.KEY, Message.CREDENTIAL_IS_NOT_AUTHENTIC);
     		return loginData;
@@ -76,7 +74,7 @@ public class LoginService {
     		Map<String, Object> extraData = new HashMap<String, Object>();
     		extraData.put(Constants.JwtToken.DAYS_SINCE_LAST_PASSWORD_CHANGE, daysSinceLastPasswordChange);
     		
-    		String jwtToken = jwtTokenService.generateToken(JwtTokenPurpose.FORCED_PASSWORD_RESET, hostUrl, userClientService, extraData);
+    		String jwtToken = jwtTokenService.generateToken(JwtTokenPurpose.PASSWORD_RESET, hostUrl, userClientService, extraData);
         	if (jwtToken == null) throw new Exception("Could not generate jwt token");
       
     		loginData.put(Constants.JwtToken.KEY, jwtToken);
@@ -101,19 +99,5 @@ public class LoginService {
 
 		return loginData;
 	}
-    
-    public boolean doesCredentialMatch(User user, String rawPassword) {
-    	boolean isAuthenticationSuccessful = false;
-    	
-    	if (user != null && rawPassword != null && !rawPassword.isEmpty()) {
-    		
-    		PasswordDetails passwordDetails = new PasswordDetails(user.getSaltValue(), user.getPassword());
-    		isAuthenticationSuccessful = authenticationService.isPasswordCorrect(rawPassword, passwordDetails);
-    		
-    	}
-    	System.out.println("Is credential matched for user[id:" + user.getId() + "]?\n >> "+ isAuthenticationSuccessful);
-		return isAuthenticationSuccessful;
-    	
-    }
 
 }

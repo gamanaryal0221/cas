@@ -3,10 +3,19 @@ package vcp.np.cas.services;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import vcp.np.cas.domains.User;
+import vcp.np.cas.repositories.custom.CustomQueries;
 
 @Service
 public class AuthenticationService {
+
+
+	@Autowired
+	public CustomQueries customQueries;
+	
 
     public AuthenticationService() {
     }
@@ -56,7 +65,32 @@ public class AuthenticationService {
         String enteredPasswordHash = hashPassword(storedPasswordDetails.getSaltValue(), rawPassword);
     	return enteredPasswordHash.equals(storedPasswordDetails.getHashedPassword());
     }
-
+    
+    public boolean doesCredentialMatch(User user, String rawPassword) {
+    	boolean isAuthenticationSuccessful = false;
+    	
+    	if (user != null && rawPassword != null && !rawPassword.isEmpty()) {
+    		
+    		PasswordDetails passwordDetails = new PasswordDetails(user.getSaltValue(), user.getPassword());
+    		isAuthenticationSuccessful = isPasswordCorrect(rawPassword, passwordDetails);
+    		
+    	}
+    	System.out.println("Is credential matched for user[id:" + user.getId() + "]?\n >> "+ isAuthenticationSuccessful);
+		return isAuthenticationSuccessful;
+    	
+    }
+    
+    public boolean doesItMatchWithOldPassword(User user, String rawPassword) {
+    	System.out.println("Checking if the password is in the user[id: " + user.getId() + "]'s password history ...");
+		String enteredPasswordHash = hashPassword(user.getSaltValue(), rawPassword);
+		if (enteredPasswordHash.equals(user.getPassword())) {
+	    	System.out.println("User[id: " + user.getId() + "] provided the current password to reset");
+			return true;
+		}else {
+			return customQueries.isItInUserPasswordHistory(user.getId(), rawPassword);
+		}
+	}
+    
     public static class PasswordDetails {
     	String saltValue = "";
     	String hashedPassword = "";
@@ -82,4 +116,7 @@ public class AuthenticationService {
 			this.hashedPassword = hashedPassword;
 		}
     }
+
+
+	
 }

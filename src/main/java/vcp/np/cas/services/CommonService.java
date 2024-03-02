@@ -157,7 +157,7 @@ public class CommonService {
 		if (clientServiceThemeMap.isEmpty()) {
 			System.out.println("Setting default theme ...");
 			
-		    clientServiceThemeMap.put(Constants.LOGO_URL, "https://media.istockphoto.com/id/1313644269/vector/gold-and-silver-circle-star-logo-template.jpg?s=612x612&w=0&k=20&c=hDqCI9qTkNqNcKa6XS7aBim7xKz8cZbnm80Z_xiU2DI=");
+		    clientServiceThemeMap.put(Constants.LOGO_URL, "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3qvfiNwIrb7XMfI6Kru-uCz57xEQeEND8T1IQYHVROA&s");
 		    clientServiceThemeMap.put(Constants.BACKGROUND_IMAGE_URL, "https://img.freepik.com/free-photo/autumn-leaf-falling-revealing-intricate-leaf-vein-generated-by-ai_188544-9869.jpg?size=626&ext=jpg&ga=GA1.1.1412446893.1705017600&semt=ais");
 		}
 		
@@ -242,6 +242,7 @@ public class CommonService {
             System.out.println("user:" + userId + " or clientServiceId:" + clientServiceId + " is null");
 		}
 		
+    	System.out.println("Does user[id" + userId + "] have access on client-service[id:" + clientServiceId + "]?\n >> " + (userClientService != null));
 		return userClientService;
 	}
 

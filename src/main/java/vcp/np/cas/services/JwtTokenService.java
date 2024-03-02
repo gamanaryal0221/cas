@@ -1,5 +1,6 @@
 package vcp.np.cas.services;
 
+import java.io.Serializable;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -10,15 +11,19 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import vcp.np.cas.domains.User;
 import vcp.np.cas.domains.UserClientService;
 import vcp.np.cas.utils.Constants;
+import vcp.np.cas.utils.Constants.JwtToken;
 import vcp.np.cas.utils.enums.JwtTokenPurpose;
 
 
@@ -56,7 +61,8 @@ public class JwtTokenService {
             
             
             expirationMap.put(JwtTokenPurpose.LOGIN_SUCCESSFUL.getCode(), (3600l * 1000));
-            expirationMap.put(JwtTokenPurpose.FORCED_PASSWORD_RESET.getCode(), (3600l * 1000));
+            expirationMap.put(JwtTokenPurpose.FORCED_PASSWORD_RESET.getCode(), (10l * 60 * 1000l));
+            expirationMap.put(JwtTokenPurpose.PASSWORD_RESET.getCode(), (1001l * 1000));
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -78,7 +84,7 @@ public class JwtTokenService {
 	public String generateToken(JwtTokenPurpose jwtTokenPurpose, String hostUrl, UserClientService userClientService, Map<String, Object> extraData) {
 		if (userClientService != null) {
 			
-			String log = "jwt token purpose: '" + jwtTokenPurpose.getCode() + "' for user[id: " + userClientService.getUser().getId() + "] on client-service[id: " + userClientService.getId() + "]";
+			String log = "jwt token[purpose: '" + jwtTokenPurpose.getCode() + "'] for user[id: " + userClientService.getUser().getId() + "] on client-service[id: " + userClientService.getId() + "]";
 			System.out.println("Generating " + log);
 			
 			try {
@@ -132,10 +138,11 @@ public class JwtTokenService {
 		
 		jwtMap.put(Constants.JwtToken.CLIENT_DISPLAY_NAME, userClientService.getClient().getDisplayName());
 		
+		jwtMap.put(Constants.JwtToken.REQUEST_HOST, userClientService.getClientService().getRequestHost());
 		if (hostUrl != null && hostUrl.isEmpty()) {
-			jwtMap.put(Constants.JwtToken.HOST_URL, userClientService.getClientService().getRequestHost());
-		}else {
-			jwtMap.put(Constants.JwtToken.REQUEST_HOST, userClientService.getClientService().getRequestHost());
+			if(List.of(JwtTokenPurpose.FORCED_PASSWORD_RESET.getCode(), JwtTokenPurpose.PASSWORD_RESET.getCode()).contains(jwtTokenPurpose.getCode())) {
+				jwtMap.put(Constants.JwtToken.HOST_URL, hostUrl);
+			}
 		}
 		
 		if(extraData != null) jwtMap.putAll(extraData);
@@ -144,21 +151,71 @@ public class JwtTokenService {
 	}
 
 	
-	public Claims parseToken(String jwtToken) {
+	public Claims parseToken(List<String> possiblePurposeList, String jwtToken) {
 		System.out.println("Parsing jwt token: " + jwtToken);
         try {
             PublicKey publicKey = keyPair.getPublic();
 
-            return Jwts.parserBuilder()
+            Claims claims =  Jwts.parserBuilder()
                     .setSigningKey(publicKey)
                     .build()
                     .parseClaimsJws(jwtToken)
                     .getBody();
-        } catch (Exception e) {
-            e.printStackTrace();
-    		System.out.println("Error encountered while parsing jwt token: " + jwtToken);
+            
+            
+            // Check if token is expired
+            Date expirationDate = claims.getExpiration();
+            if (expirationDate != null && expirationDate.before(new Date())) {
+                throw new ExpiredJwtException(null, claims, "Token: " + jwtToken + " is expired");
+            }
+            
+            
+            // Check if purpose of the token is valid
+            String purpose = (String) claims.get(JwtToken.PURPOSE);
+            if (purpose == null || purpose.isEmpty()) {
+            	throw new InvalidJwtPurposeException("Invalid JWT purpose of token: " + jwtToken);
+            }
+            if (!possiblePurposeList.contains(purpose)) {
+            	throw new InvalidJwtPurposeException("JWT purpose did not meet -> token: " + jwtToken);
+    		}
+            
+            
+            return claims;
+            
+        } catch (ExpiredJwtException ex) {
+        	ex.printStackTrace();
+            System.out.println("JWT token is expired");
             return null;
+            
+        } catch (InvalidJwtPurposeException ex) {
+        	ex.printStackTrace();
+            System.out.println("Invalid JWT purpose of token: " + jwtToken);
+            return null;
+            
+        } catch (JwtException jex) {
+        	jex.printStackTrace();
+            System.out.println("JWT token: " + jwtToken + " parsing error: " + jex.getMessage());
+            return null;
+            
+        } catch (Exception ex) {
+            System.out.println("Unexpected error while parsing JWT token: " + jwtToken + " -> " + ex.getMessage());
+            return null;
+            
         }
+        
     }
 	
+	
+	public class InvalidJwtPurposeException extends RuntimeException implements Serializable {
+
+	    private static final long serialVersionUID = 1L;
+
+	    public InvalidJwtPurposeException(String message) {
+	        super(message);
+	    }
+
+	    public InvalidJwtPurposeException(String message, Throwable cause) {
+	        super(message, cause);
+	    }
+	}
 }

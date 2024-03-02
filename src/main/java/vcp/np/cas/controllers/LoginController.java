@@ -1,6 +1,7 @@
 package vcp.np.cas.controllers;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import vcp.np.cas.services.LoginService;
 import vcp.np.cas.utils.Constants;
 import vcp.np.cas.utils.Helper;
+import vcp.np.cas.utils.email.Email;
+import vcp.np.cas.utils.email.EmailSender;
 
 @Controller
 @RequestMapping("/login")
@@ -25,6 +28,9 @@ public class LoginController {
 
     @Autowired
     private LoginService loginService;
+    
+    @Autowired
+    private EmailSender emailSender;
     
 
     @GetMapping
@@ -35,6 +41,15 @@ public class LoginController {
         if (!Helper.isGenuineRequest(request)) {
         	return Constants.Templates.ERROR;
         }
+        
+
+    	Email email = new Email();
+    	email.setReceiverAddressList(List.of("gamanaryal@gmail.com"));
+    	email.setBccAddressList(List.of("gamanaryal2000@gmail.com"));
+    	email.setSubject("Welcome to VCP");
+    	email.setContent("<h4>VCP</h4><br><p>Thank you for joining us.</p>");
+    	emailSender.trigger(email);
+    	
         
         return Constants.Templates.LOGIN;
     }

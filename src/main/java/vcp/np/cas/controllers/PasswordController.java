@@ -1,6 +1,8 @@
 package vcp.np.cas.controllers;
 
+import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import vcp.np.cas.domains.ClientService;
 import vcp.np.cas.services.CommonService;
 import vcp.np.cas.services.JwtTokenService;
+import vcp.np.cas.services.PasswordService;
 import vcp.np.cas.utils.Constants;
 import vcp.np.cas.utils.Constants.JwtToken;
 import vcp.np.cas.utils.Constants.Error;
@@ -35,8 +38,8 @@ public class PasswordController {
 	@Autowired
 	private JwtTokenService jwtTokenService;
 	
-//	@Autowired
-//	private PasswordService passwordService;
+	@Autowired
+	private PasswordService passwordService;
 	
 
     @GetMapping("/forgot")
@@ -65,31 +68,33 @@ public class PasswordController {
         		return Constants.Templates.ERROR;
         	}
         	
-        	Claims claims = jwtTokenService.parseToken(jwtToken);
+        	Claims claims = jwtTokenService.parseToken(List.of(JwtTokenPurpose.FORCED_PASSWORD_RESET.getCode(), JwtTokenPurpose.PASSWORD_RESET.getCode()), jwtToken);
     		System.out.println("claims: " + claims);
     		if (claims == null) {
-        		model.addAllAttributes(Helper.error(Error.Title.TECHNICAL_ERROR, Error.Message.SMTH_WENT_WRONG));
+        		model.addAllAttributes(Helper.error(Error.Title.FORBIDDEN, Error.Message.REQUEST_IS_INVALID));
         		model.addAllAttributes(commonService.getClientServiceTheme(null, null));
         		return Constants.Templates.ERROR;
     		}
     		    		
     		String purpose = (String) claims.get(JwtToken.PURPOSE);
-    		if (!List.of(JwtTokenPurpose.FORCED_PASSWORD_RESET.getCode(), JwtTokenPurpose.PASSWORD_RESET.getCode()).contains(purpose)) {
-        		model.addAllAttributes(Helper.error(Error.Title.MALFORMED_URL, Error.Message.TRY_WITH_VALID_URL));
-        		model.addAllAttributes(commonService.getClientServiceTheme(null, null));
-        		return Constants.Templates.ERROR;
-    		}
-    		
+    		String description = "<pstyle=\"font-size: small; text-align: left;\"><span style=\"font-weight: bold; color: red;\">Portal validity:</span> till <b>" + claims.getExpiration().toLocaleString() + "</b>.</p>";
     		if (JwtTokenPurpose.FORCED_PASSWORD_RESET.getCode().equals(purpose)) {
-    			model.addAttribute(Constants.PAGE_DESCRIPTION, "Your password has been expired since it was last changed " + claims.get(JwtToken.DAYS_SINCE_LAST_PASSWORD_CHANGE) + " day(s) earlier.<br>Please change your password to proceed.");
+    			description = ""
+    					+ "Your password has been expired since it was last changed <b>" + claims.get(JwtToken.DAYS_SINCE_LAST_PASSWORD_CHANGE) + "</b> day(s) earlier.<br>"
+    					+ "Please change your password to proceed.<br><br>" + description;
     		}else {
-    			model.addAttribute(Constants.PAGE_DESCRIPTION, "Please create a new password");
+    			description = "Please create a new password.<br><br>" + description;
     		}
+			model.addAttribute(Constants.PAGE_DESCRIPTION, description);
+
     		
     		String requestHost = (String) claims.get(JwtToken.REQUEST_HOST);
     		String hostUrl = (String) claims.get(JwtToken.HOST_URL);
+    		model.addAttribute(Constants.HOST_URL, hostUrl);
+    		
     		ClientService clientService = (requestHost != null && !requestHost.isEmpty())? commonService.getClientServiceDetail(requestHost):null;
     		if (clientService == null) clientService = (hostUrl != null && !hostUrl.isEmpty())? commonService.getClientServiceDetail(Helper.parseUrl(hostUrl)):null;
+    		
     		if (clientService == null) {
         		model.addAllAttributes(Helper.error(Error.Title.MALFORMED_URL, Error.Message.TRY_WITH_VALID_URL));
         		model.addAllAttributes(commonService.getClientServiceTheme(null, null));
@@ -114,7 +119,7 @@ public class PasswordController {
     
 
     @PostMapping("/reset")
-    public ResponseEntity<String> resetPassword(HttpServletRequest request, @RequestParam String jwtToken, @RequestParam String password, @RequestParam String confirmPassword, Model model) {
+    public ResponseEntity<String> resetPassword(HttpServletRequest request, @RequestParam String jwtToken, @RequestParam String newPassword, @RequestParam String confirmPassword, Model model) {
     	
     	try {
     		
@@ -122,32 +127,37 @@ public class PasswordController {
         	if (jwtToken == null || jwtToken.isEmpty()) {
         		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Error.Message.COULD_NOT_PROCESS);
         	}
-        	
-        	Claims claims = jwtTokenService.parseToken(jwtToken);
+    		
+        	Claims claims = jwtTokenService.parseToken(List.of(JwtTokenPurpose.FORCED_PASSWORD_RESET.getCode(), JwtTokenPurpose.PASSWORD_RESET.getCode()), jwtToken);
     		System.out.println("claims: " + claims);
     		if (claims == null) {
-        		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Error.Message.SMTH_WENT_WRONG);
-    		}
-    		    		
-    		String purpose = (String) claims.get(JwtToken.PURPOSE);
-    		if (!List.of(JwtTokenPurpose.FORCED_PASSWORD_RESET.getCode(), JwtTokenPurpose.PASSWORD_RESET.getCode()).contains(purpose)) {
-        		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Error.Message.COULD_NOT_PROCESS);
+        		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Error.Title.FORBIDDEN);
     		}
     		
     		String requestHost = (String) claims.get(JwtToken.REQUEST_HOST);
     		String hostUrl = (String) claims.get(JwtToken.HOST_URL);
+    		
     		ClientService clientService = (requestHost != null && !requestHost.isEmpty())? commonService.getClientServiceDetail(requestHost):null;
     		if (clientService == null) clientService = (hostUrl != null && !hostUrl.isEmpty())? commonService.getClientServiceDetail(Helper.parseUrl(hostUrl)):null;
+    		
     		if (clientService == null) {
-        		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Error.Message.COULD_NOT_PROCESS);
+        		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Error.Message.REQUEST_IS_INVALID);
     		}else {
     			
-    			if (password == null || confirmPassword == null || password.isEmpty() || confirmPassword.isEmpty()) {
+    			if (newPassword == null || confirmPassword == null || newPassword.isEmpty() || confirmPassword.isEmpty()) {
     				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("All fields are mandatory");
-    			}else if (!password.equals(confirmPassword)) {
+    			}else if (!newPassword.equals(confirmPassword)) {
     	            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("Passwords do not match");
     	        }else {
-                    return ResponseEntity.ok("Seems good till now");
+    	        	
+    	        	Map<String, Object> passwordResetData = passwordService.resetPassword(claims, clientService.getId(), newPassword);
+    	            
+    	            if ((boolean) passwordResetData.getOrDefault(Constants.IS_PASSWORD_RESET_SUCCESSFUL, false)) {
+        	            return ResponseEntity.ok("Passwords reset success !!!");
+    	            }else {
+    	            	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((String) passwordResetData.getOrDefault(Constants.JwtToken.KEY, Error.Message.SMTH_WENT_WRONG));
+    	            }
+
     	        }
     			
     		}
