@@ -13,15 +13,14 @@ public class Constants {
 		public class Uri {
 
 			public static String LOGIN = "/login";
-			public static String ERROR = "/error";
-			public static String PASSWORD = "/password";
+			public static String FORGOT_PASSWORD = "/password/forgot";
 			public static String PASSWORD_RESET = "/password/reset";
 
-			private static List<String> ALL = new ArrayList<String>(List.of(LOGIN, PASSWORD));
-			
-			public static boolean contains(String uri) {
-				return ALL.contains(uri);
-			}
+//			private static List<String> ALL = new ArrayList<String>(List.of(LOGIN, PASSWORD));
+//			
+//			public static boolean contains(String uri) {
+//				return ALL.contains(uri);
+//			}
 		}
 		
 
@@ -32,23 +31,57 @@ public class Constants {
 		}
 	}
 	
+	
+	public class Config {
+		public static String JWT_TOKEN = "jwtToken";
+		public static String PRIVATE_KEY = "privateKey";
+		public static String PUBLIC_KEY = "publicKey";
+		public static String EXPIRATION = "expiration";
+		
+		public static String MAIL = "mail";
+		public static String SENDER = "sender";
+		public static String ADDRESS = "address";
+		public static String PASSWORD = "password";
+	}
+	
+	
 	public class Templates {
 		public static String ERROR = "error";
 		public static String LOGIN = "login";
 		public static String FORGOT_PASSWORD = "forgot_password";
 		public static String PASSWORD_RESET = "password_reset";
 	}
+
+	
+	public class Environment {
+		public static String KEY = "environment";
+		public static String DEV = "development";
+		public static String QC = "qc";
+		public static String PROD = "prod";
+
+		private static List<String> ALL = new ArrayList<String>(List.of(DEV, QC, PROD));
+		public static boolean isValid(String nvironment) {
+			return ALL.contains(nvironment);
+		}
+	}
 	
 
 	// Used in Jwt token -- Sensitive
 	public class JwtToken {
 		public static String KEY = "token";
+
+		public static String ISSUED_AT = "issuedAt";
+		public static String EXPIRATION_AT = "expirationAt";
 		
 		public static String PURPOSE = "purpose";
 		
+		public static String USERNAME = "username";
 		public static String FIRST_NAME = "firstName";
 		public static String MIDDLE_NAME = "middleName";
 		public static String LAST_NAME = "lastName";
+
+		public static String MAIL_ADDRESS = "mail_address";
+		public static String NUMBER = "number";
 		
 		public static String CLIENT_DISPLAY_NAME = "clientDisplayName";
 
@@ -73,14 +106,23 @@ public class Constants {
 		public class Message {
 			public static String KEY = "errorMessage";
 
-			public static String SMTH_WENT_WRONG = "Something went wrong. Please try again.";
+			public static String SMTH_WENT_WRONG = "Something went wrong. Please try again later.";
 			public static String TRY_WITH_VALID_URL = "Please try with valid URL.";
 			public static String CREDENTIAL_IS_NOT_AUTHENTIC = "Provided credentials is not determined to be authentic.";
 			public static String COULD_NOT_PROCESS = "Sorry, your request could not be processed.";
 			public static String REQUEST_IS_INVALID = "Please try with valid request.";
 			public static String CAN_NOT_SET_OLD_PASSWORD = "You can not set your old password.";
+			public static String USERNAME_IS_NOT_VALID = "Provided information is not valid.";
+			public static String PASSWORD_DID_NOT_MEET_STANDARD = "Password must contain 8-12 characters, 1 upper case, 1 lower case, 1 special character, and 1 number";
 
 		}
+	}
+
+	public class Default {
+	
+        public static final Long LOGIN_SUCCESS_JWT_EXPIRATION_PERIOD = (480l * 60 * 1000l);
+        public static final Long CHANGE_PASSWORD_JWT_EXPIRATION_PERIOD = (5l * 60 * 1000l);
+        public static final Long PASSWORD_RESET_JWT_EXPIRATION_PERIOD = (3l * 60 * 1000l);
 	}
 	
 	public static String REQUEST_HOST = "requestHost";
@@ -103,12 +145,14 @@ public class Constants {
 	public static String POST_REQUEST_URL = "postRequestUrl";
 	
 	public static String IS_LOGIN_SUCCESSFUL = "isLoginSuccessFul";
-	public static String IS_PASSWORD_RESET_SUCCESSFUL = "isLoginSuccessFul";
+	public static String IS_FORGOT_PASSWORD_REQUEST_SUCCESSFUL = "isForgotPasswordRequetSuccessFul";
+	public static String IS_PASSWORD_RESET_SUCCESSFUL = "isPasswordResetSuccessFul";
 	
 	public static String LOGIN_SUCCESS_PATH = "loginSuccessPath";
 
 	public static String IS_PASSWORD_EXPIRED = "isPasswordExpired";
 	
+	public static String PAGE_TITLE = "pageTitle";
 	public static String PAGE_DESCRIPTION = "pageDescription";
 
 }

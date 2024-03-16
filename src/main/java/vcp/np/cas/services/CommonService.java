@@ -12,15 +12,13 @@ import org.springframework.stereotype.Service;
 import vcp.np.cas.domains.ClientService;
 import vcp.np.cas.domains.ClientServiceTheme;
 import vcp.np.cas.domains.ServiceSettings;
-import vcp.np.cas.domains.User;
 import vcp.np.cas.domains.UserClientService;
-import vcp.np.cas.domains.UserEmail;
 import vcp.np.cas.repositories.ClientServiceRepository;
 import vcp.np.cas.repositories.ClientServiceThemeRepository;
 import vcp.np.cas.repositories.ServiceSettingsRepository;
 import vcp.np.cas.repositories.UserClientServiceRepository;
-import vcp.np.cas.repositories.UserEmailRepository;
 import vcp.np.cas.repositories.UserRepository;
+import vcp.np.cas.repositories.custom.CustomQueries;
 import vcp.np.cas.utils.Constants;
 
 
@@ -29,9 +27,6 @@ public class CommonService {
 	
 	@Autowired
 	public UserRepository userRepository;
-
-	@Autowired
-	public UserEmailRepository userEmailRepository;
 
 	@Autowired
 	public ClientServiceRepository clientServiceRepository;
@@ -44,65 +39,67 @@ public class CommonService {
 
 	@Autowired
 	public ServiceSettingsRepository serviceSettingsRepository;
+
+	@Autowired
+	public CustomQueries customQueries;
 	
 	
 	public ClientService getClientServiceDetail(URL url) {
 	    System.out.println("Fetching client-service detail...");
-	    ClientService clientService = null;
 
-	    if (url != null) {
-
-	        try {
-                String requestHost = url.getHost();
-                System.out.println("requestHost: " + requestHost);
-
-                Optional<ClientService> optionalClientService = clientServiceRepository.findByRequestHost(requestHost);
-                clientService = optionalClientService.orElse(null);
-            	System.out.println("clientService: " + clientService);
-
-                if (clientService == null) {
-                    System.out.println("Could not find requestHost: " + requestHost);
-                }
-
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	            System.out.println("Error occurred in getClientServiceDetail: " + e.getMessage());
-	        }
-
-	    } else {
-	        System.out.println("URL is null.");
+	    if (url == null) {
+	        System.out.println("URL:" + url + " is null in getClientServiceDetail.");
+	        return null;
 	    }
+	    
+	    try {
+            String requestHost = url.getHost();
+            System.out.println("requestHost: " + requestHost);
 
-	    return clientService;
+            Optional<ClientService> optionalClientService = clientServiceRepository.findByRequestHost(requestHost);
+            ClientService clientService = optionalClientService.orElse(null);
+        	System.out.println("clientService: " + clientService);
+
+            if (clientService == null) {
+                System.out.println("Could not find requestHost: " + requestHost);
+            }
+            return clientService;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error occurred in getClientServiceDetail: " + e.getMessage());
+            return null;
+        }
+
 	}
 
 	public ClientService getClientServiceDetail(String requestHost) {
 	    System.out.println("Fetching client-service detail...");
-	    ClientService clientService = null;
 
-	    if (requestHost != null && !requestHost.isEmpty()) {
-
-	        try {
-                System.out.println("requestHost: " + requestHost);
-
-                Optional<ClientService> optionalClientService = clientServiceRepository.findByRequestHost(requestHost);
-                clientService = optionalClientService.orElse(null);
-            	System.out.println("clientService: " + clientService);
-
-                if (clientService == null) {
-                    System.out.println("Could not find requestHost: " + requestHost);
-                }
-
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	            System.out.println("Error occurred in getClientServiceDetail: " + e.getMessage());
-	        }
-
-	    } else {
-	        System.out.println("requestHost: '" + requestHost + "' is not valid.");
+	    if (requestHost == null || requestHost.isEmpty()) {
+	        System.out.println("requestHost: '" + requestHost + "' is null or empty in getClientServiceDetail.");
+	        return null;
 	    }
+	    
+	    try {
+            System.out.println("requestHost: " + requestHost);
 
-	    return clientService;
+            Optional<ClientService> optionalClientService = clientServiceRepository.findByRequestHost(requestHost);
+            ClientService clientService = optionalClientService.orElse(null);
+        	System.out.println("clientService: " + clientService);
+
+            if (clientService == null) {
+                System.out.println("Could not find requestHost: " + requestHost);
+            }
+            
+            return clientService;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error occurred in getClientServiceDetail: " + e.getMessage());
+            return null;
+        }
+
 	}
 	
 	
@@ -111,6 +108,7 @@ public class CommonService {
 		Map<String, String> clientServiceThemeMap = new HashMap<String, String>();
 		
 		if (clientId != null && serviceId != null) {
+			
 			List<ClientServiceTheme> clientServiceThemeList = clientServiceThemeRepository.findAllByClientId(clientId);
 			
 			if (clientServiceThemeList != null && !clientServiceThemeList.isEmpty()) {
@@ -164,113 +162,88 @@ public class CommonService {
 		return clientServiceThemeMap;
 	}
 	
-	
-	public User fetchTheUserFromDb(String usernameOrEmail) {
-		User user = null;
+
+	public UserClientService getUserClientServiceById(Long userId, Long clientServiceId) {
 		
-		user = getUserByUsername(usernameOrEmail);
-		if (user == null) {
-			UserEmail userEmail = getUserEmail(usernameOrEmail, true);
-			if (userEmail != null) user = userEmail.getUser();
+		if (userId == null || clientServiceId == null) {
+            System.out.println("user:" + userId + " or clientServiceId:" + clientServiceId + " is null in getUserClientServiceById");
+            return null;
 		}
 		
-		return user;
-	}
-	
-	
-	public User getUserByUsername(String username) {
-		User user = null;
-		
-		if (username != null) {
-			try {
-				Optional<User> optionalUser = userRepository.findByUsername(username);
-				user = optionalUser.orElse(null);
-			}catch(Exception e) {
-				e.printStackTrace();
-	            System.out.println("Error occurred in getUserByUsername: " + e.getMessage());
-			}
-		}
-		
-		System.out.println("User[username:" + username + ((user != null)? "]":"] not") + " found in the db");
-		return user;
-	}
+		try {
 
-	
-	public UserEmail getUserEmail(String email, boolean searchForPrimaryOnly) {
-		UserEmail userEmail = null;
-		
-		if (email != null) {
-			try {
-				Optional<UserEmail> optionalUserEmail = null;
-				if (searchForPrimaryOnly) {
-					optionalUserEmail = userEmailRepository.findByEmailAndIsPrimary(email, true);
-				}else {
-					optionalUserEmail = userEmailRepository.findByEmail(email);
-				}
-				
-				userEmail = optionalUserEmail.orElse(null);
-			}catch(Exception e) {
-				e.printStackTrace();
-	            System.out.println("Error occurred in getUserEmail: " + e.getMessage());
-			}
-		}
-		
-		System.out.println("User[email:" + email + ((userEmail != null)? "]":"] not") + " found in the db");
-		return userEmail;
-	}
-
-
-	public UserClientService getUserClientService(Long userId, Long clientServiceId) {
-		UserClientService userClientService = null;
-		
-		if (userId != null && clientServiceId != null) {
+			Optional<UserClientService> optionalUserClientService = userClientServiceRepository.findByUserIdAndClientServiceId(userId, clientServiceId);
+			UserClientService userClientService = optionalUserClientService.orElse(null);
 			
-	        try {
+	    	System.out.println("Does user[id" + userId + "] have access on client-service[id:" + clientServiceId + "]?\n >> " + (userClientService != null));
+	    	return userClientService;
 
-    			Optional<UserClientService> optionalUserClientService = userClientServiceRepository.findByUserIdAndClientServiceId(userId, clientServiceId);
-    			userClientService = optionalUserClientService.orElse(null);
-                if (userClientService == null) {
-                    System.out.println("Could not find access of user[id:" + userId + "] on clientService[id:" + clientServiceId + "]");
-                }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error occurred in getUserClientServiceById: " + e.getMessage());
+            return null;
+        }
+		
+	}
 
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	            System.out.println("Error occurred in getUserClientServiceDetail: " + e.getMessage());
-	        }
-			
-		}else {
-            System.out.println("user:" + userId + " or clientServiceId:" + clientServiceId + " is null");
+	public UserClientService getUserClientServiceByCredential(String username, Long clientServiceId) {		
+		if (username == null || username.isEmpty() || clientServiceId == null) {
+            System.out.println("username:" + username + " or clientServiceId:" + clientServiceId + " is null or empty in getUserClientServiceByCredential");
+            return null;
 		}
 		
-    	System.out.println("Does user[id" + userId + "] have access on client-service[id:" + clientServiceId + "]?\n >> " + (userClientService != null));
-		return userClientService;
+		try {
+
+			Long userClientServiceId = customQueries.getUserClientServiceByCredential(username, clientServiceId);
+			if (userClientServiceId == null) {
+                System.out.println("Did not get userClientServiceId from getUserClientServiceByCredential");
+				return null;
+			}
+			
+			Optional<UserClientService> optionalUserClientService = userClientServiceRepository.findById(userClientServiceId);
+			UserClientService userClientService = optionalUserClientService.orElse(null);
+            if (userClientService == null) {
+                System.out.println("Could not find userClientServiceId:" + userClientServiceId + " on db");
+                return null;
+            }
+            
+            return userClientService;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error occurred in getUserClientServiceByCredential: " + e.getMessage());
+            return null;
+        }
+		
 	}
 
 
 	public String getLoginSuccessPathOfService(Long serviceId) {
-		String loginSuccessPath = null;
 		
-		if (serviceId != null) {
-			
-	        try {
-
-    			Optional<ServiceSettings> optionalServiceSettings = serviceSettingsRepository.findByServiceId(serviceId);
-    			ServiceSettings serviceSettings = optionalServiceSettings.orElse(null);
-                if (serviceSettings == null) {
-                    System.out.println("Could not find settings of service[id:" + serviceId + "]");
-                }else {
-                	loginSuccessPath = serviceSettings.getLoginSuccessPath();
-                }
-
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	            System.out.println("Error occurred in getLoginSuccessPathOfService: " + e.getMessage());
-	        }
-			
-		}else {
-            System.out.println("serviceId:" + serviceId + " is null");
+		if (serviceId == null) {
+            System.out.println("serviceId:" + serviceId + " is null in getLoginSuccessPathOfService");
+            return "";
 		}
 		
-		return (loginSuccessPath != null && !loginSuccessPath.isEmpty())? loginSuccessPath:"";
+		try {
+
+			Optional<ServiceSettings> optionalServiceSettings = serviceSettingsRepository.findByServiceId(serviceId);
+			ServiceSettings serviceSettings = optionalServiceSettings.orElse(null);
+            if (serviceSettings == null) {
+                System.out.println("Could not find settings of service[id:" + serviceId + "]");
+                return "";
+            }
+
+        	String loginSuccessPath = serviceSettings.getLoginSuccessPath();
+        	System.out.println("loginSuccessPath: " + loginSuccessPath);
+            
+            return (loginSuccessPath == null || loginSuccessPath.isEmpty())? "":loginSuccessPath;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error occurred in getLoginSuccessPathOfService: " + e.getMessage());
+            return "";
+        }
+		
 	}
 }

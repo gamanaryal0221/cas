@@ -33,12 +33,18 @@ public class ClientSettings {
     @OneToOne
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
+
+    @Column(name = "is_sharing_client", columnDefinition = "BIT DEFAULT 1")
+    private boolean isSharingClient = true;
     
     @Column(name = "inactivity_period", nullable = false)
     private int inactivityPeriod = 2;
     
     @Column(name = "password_expiration_period", nullable = false)
     private int passwordExpirationPeriod = 2;
+    
+    @Column(name = "max_login_attempt", nullable = false)
+    private int maxLoginAttempt = 3;
     
     @Column(name = "logout_redirect_url", length = 500)
     private String logoutRedirectUrl;

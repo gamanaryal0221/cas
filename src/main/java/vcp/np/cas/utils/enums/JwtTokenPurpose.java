@@ -1,9 +1,9 @@
 package vcp.np.cas.utils.enums;
 
 public enum JwtTokenPurpose {
-	LOGIN_SUCCESSFUL("vcp.token.jwt.login.successful"),
-	PASSWORD_RESET("vcp.token.jwt.password.reset"),
-	FORCED_PASSWORD_RESET("vcp.token.jwt.forced.password.reset");
+	LOGIN_SUCCESSFUL("login.successful"),
+	PASSWORD_RESET("password.reset"),
+	CHANGE_PASSWORD("change.password");
 	
     private final String code;
 	

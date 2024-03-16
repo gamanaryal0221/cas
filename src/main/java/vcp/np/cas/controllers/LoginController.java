@@ -1,7 +1,6 @@
 package vcp.np.cas.controllers;
 
 import java.net.URL;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +17,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import vcp.np.cas.services.LoginService;
 import vcp.np.cas.utils.Constants;
 import vcp.np.cas.utils.Helper;
-import vcp.np.cas.utils.email.Email;
-import vcp.np.cas.utils.email.EmailSender;
 
 @Controller
 @RequestMapping("/login")
@@ -29,10 +26,7 @@ public class LoginController {
     @Autowired
     private LoginService loginService;
     
-    @Autowired
-    private EmailSender emailSender;
     
-
     @GetMapping
     public String showLoginPage(HttpServletRequest request, Model model) {
     	
@@ -41,16 +35,7 @@ public class LoginController {
         if (!Helper.isGenuineRequest(request)) {
         	return Constants.Templates.ERROR;
         }
-        
-
-    	Email email = new Email();
-    	email.setReceiverAddressList(List.of("gamanaryal@gmail.com"));
-    	email.setBccAddressList(List.of("gamanaryal2000@gmail.com"));
-    	email.setSubject("Welcome to VCP");
-    	email.setContent("<h4>VCP</h4><br><p>Thank you for joining us.</p>");
-    	emailSender.trigger(email);
     	
-        
         return Constants.Templates.LOGIN;
     }
     
@@ -79,8 +64,9 @@ public class LoginController {
         
         try {
 
-            Map<String, Object> loginData = loginService.loginUsingCredentials(hostUrl, clientId, serviceId, clientServiceId, username, password);
-            
+			System.out.println("request.getRequestURL(): " + (request.getRequestURL()));
+            Map<String, Object> loginData = loginService.loginUsingCredentials(request.getRequestURL(), hostUrl, clientId, serviceId, clientServiceId, username, password);
+
             if ((boolean) loginData.getOrDefault(Constants.IS_LOGIN_SUCCESSFUL, false)) {
             	
             	URL url = Helper.parseUrl(hostUrl);
@@ -105,7 +91,7 @@ public class LoginController {
             		redirectionUrl = redirectionUrl + "?token=" + ((String) loginData.getOrDefault(Constants.JwtToken.KEY, ""));
             	}
             	
-//            	httpServletResponse.sendRedirect(redirectionUrl);
+           	httpServletResponse.sendRedirect(redirectionUrl);
             	return "login";
             }else {
             	

@@ -35,6 +35,12 @@ public class User {
     @Column(name = "username", nullable = false)
     private String username;
 
+    @Column(name = "mail_address", nullable = false)
+    private String mailAddress;
+
+    @Column(name = "number")
+    private String number;
+
     @Column(name = "first_name", nullable = false)
     private String firstName;
 
@@ -57,14 +63,10 @@ public class User {
     @Column(name = "password", nullable = false, length = 500)
     private String password;
     
-    @Column(name = "last_password_changed_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private Timestamp lastPasswordChangedAt;
-    
 
 	@PrePersist
 	protected void onCreate() {
 		createdAt = new Timestamp(System.currentTimeMillis());
-		lastPasswordChangedAt = new Timestamp(System.currentTimeMillis());
 	}
 
     @PreUpdate
@@ -104,6 +106,14 @@ public class User {
 
 	public String getPassword() {
 		return password;
+	}
+
+	public String getMailAddress() {
+		return mailAddress;
+	}
+
+	public String getNumber() {
+		return number;
 	}
 
     

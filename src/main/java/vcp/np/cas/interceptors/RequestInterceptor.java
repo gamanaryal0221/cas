@@ -38,6 +38,8 @@ public class RequestInterceptor implements HandlerInterceptor{
         	return true;
         }
         
+        boolean isPostRequestOnForgotPassword = Constants.Request.Uri.FORGOT_PASSWORD.equalsIgnoreCase(requestUri) && Constants.Request.Method.POST.equalsIgnoreCase(requestMethod);
+        
 		boolean isGenuineRequest = false;
 
     	ModelAndView modelAndView = new ModelAndView();
@@ -64,7 +66,10 @@ public class RequestInterceptor implements HandlerInterceptor{
         			modelAndView.addObject(Constants.CLIENT_ID, clientService.getClient().getId());
         			modelAndView.addObject(Constants.SERVICE_ID, clientService.getService().getId());
         			
-        			modelAndView.addAllObjects(commonService.getClientServiceTheme(clientService.getClient().getId(), clientService.getService().getId()));
+        			if (!isPostRequestOnForgotPassword) {
+        				// /password/forgot - get, /login - get,post
+            			modelAndView.addAllObjects(commonService.getClientServiceTheme(clientService.getClient().getId(), clientService.getService().getId()));
+        			}
         		
         		}
             	

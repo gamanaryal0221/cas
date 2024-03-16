@@ -2,7 +2,7 @@ package vcp.np.cas.utils.email;
 
 import java.util.List;
 
-public class Email {
+public class MailModel {
 
     private List<String> receiverAddressList;
     private List<String> ccAddressList;

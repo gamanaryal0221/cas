@@ -4,12 +4,15 @@ import java.util.List;
 
 public class StringUtils {
 
-	private static String[] listToArray(List<String> list) {
-        if (list == null || list.isEmpty()) {
-            return new String[0];
-        } else {
-            return list.toArray(new String[0]);
+	public static String listToString(List list, String delimeter) {
+        delimeter = (delimeter != null && !delimeter.isEmpty())? delimeter:",";
+
+        String str = "";
+        for (Object obj : list){
+            str = obj + delimeter;
         }
+        
+        return str;
     }
 	
 }

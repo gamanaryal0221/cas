@@ -19,6 +19,33 @@ public class AuthenticationService {
 
     public AuthenticationService() {
     }
+
+    public boolean isPasswordValid(String password) {
+        if (password == null || password.isEmpty()) {
+            return false;
+        }
+
+        // Check length
+        if (password.length() < 8 || password.length() > 12) {
+            return false;
+        }
+
+        // Check for uppercase, lowercase, special character, and number
+        if (!password.matches(".*[A-Z].*")) { // Uppercase
+            return false;
+        }
+        if (!password.matches(".*[a-z].*")) { // Lowercase
+            return false;
+        }
+        if (!password.matches(".*\\W.*")) { // Special character
+            return false;
+        }
+        if (!password.matches(".*\\d.*")) { // Number
+            return false;
+        }
+
+        return true;
+    }
 	
     public String hashPassword(String saltValue, String rawPassword) {
         String passwordWithSalt = saltValue + rawPassword;
