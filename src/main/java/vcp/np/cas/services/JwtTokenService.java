@@ -18,9 +18,8 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import vcp.np.cas.domains.User;
-import vcp.np.cas.domains.UserClientService;
-import vcp.np.cas.repositories.custom.CustomQueries;
+import vcp.np.cas.config.datasource.usermanagement.domains.User;
+import vcp.np.cas.config.datasource.usermanagement.domains.UserClientService;
 import vcp.np.cas.utils.Constants;
 import vcp.np.cas.utils.Constants.JwtToken;
 import vcp.np.cas.utils.Helper;
@@ -34,7 +33,7 @@ public class JwtTokenService {
     private Map<String, Long> expirationMap = new HashMap<String, Long>();
 
 	@Autowired
-	public CustomQueries customQueries;
+	public PlainSqlQueries plainSqlQueries;
     
     
     public JwtTokenService(KeyPair keyPair, Map<String, Long> expirationMap) throws Exception {
@@ -123,6 +122,7 @@ public class JwtTokenService {
 			jwtMap.put(JwtToken.MAIL_ADDRESS, user.getMailAddress());
 			jwtMap.put(JwtToken.NUMBER, user.getNumber());
 			
+			jwtMap.put(JwtToken.CLIENT_ID, userClientService.getClient().getId());
 			jwtMap.put(JwtToken.CLIENT_DISPLAY_NAME, userClientService.getClient().getDisplayName());
 		}
 		
@@ -162,7 +162,7 @@ public class JwtTokenService {
 
 			// Checking if token has been already used to update password
 			if(List.of(JwtTokenPurpose.CHANGE_PASSWORD.getCode(), JwtTokenPurpose.PASSWORD_RESET.getCode()).contains(purpose)) {
-				if (customQueries.isPasswordUpdatedAfterTokenIssue(Long.parseLong(claims.getSubject()), Helper.dateToTimestamp(claims.getIssuedAt()))) {
+				if (plainSqlQueries.isPasswordUpdatedAfterTokenIssue(Long.parseLong(claims.getSubject()), Helper.dateToTimestamp(claims.getIssuedAt()))) {
 					throw new ExpiredJwtException(null, claims, "Token has been already used", null);
 				}
 			}

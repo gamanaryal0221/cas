@@ -6,15 +6,15 @@ import java.security.NoSuchAlgorithmException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import vcp.np.cas.domains.User;
-import vcp.np.cas.repositories.custom.CustomQueries;
+import vcp.np.cas.config.datasource.usermanagement.domains.User;
+import vcp.np.cas.utils.Helper;
 
 @Service
 public class AuthenticationService {
 
 
 	@Autowired
-	public CustomQueries customQueries;
+	public PlainSqlQueries plainSqlQueries;
 	
 
     public AuthenticationService() {
@@ -73,19 +73,9 @@ public class AuthenticationService {
     }
 
     public PasswordDetails makePassword(String rawPassword) {
-        String saltValue = generateSaltValue();
+        String saltValue = Helper.generateRandomValue(-1);
         String hashedPassword = hashPassword(saltValue, rawPassword);
         return new PasswordDetails(saltValue, hashedPassword);
-    }
-
-    private String generateSaltValue() {
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuilder salt = new StringBuilder();
-        for (int i = 0; i < 10; i++) {
-            int index = (int) (characters.length() * Math.random());
-            salt.append(characters.charAt(index));
-        }
-        return salt.toString();
     }
 
     public boolean isPasswordCorrect(String rawPassword, PasswordDetails storedPasswordDetails) {
@@ -114,7 +104,7 @@ public class AuthenticationService {
 	    	System.out.println("User[id: " + user.getId() + "] provided the current password to reset");
 			return true;
 		}else {
-			return customQueries.isItInUserPasswordHistory(user.getId(), rawPassword);
+			return plainSqlQueries.isItInUserPasswordHistory(user.getId(), rawPassword);
 		}
 	}
     

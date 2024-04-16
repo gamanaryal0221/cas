@@ -3,22 +3,22 @@ package vcp.np.cas.config;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
 
+import vcp.np.cas.profile.Profile;
+import vcp.np.cas.profile.Sprint;
 import vcp.np.cas.utils.Constants;
 
 
-// @Configuration
-// @PropertySource("classpath:application.properties")
 public class ExternalConfigLoader {
 
 	public static Map<String, Object> load(Profile profile) {
-		
-    	System.out.println("############# Loading external config #############");
+    	System.out.println("\n:::::::::: Loading external config ::::::::::");
 
-        String externalConfigPath = getExternalConfigPath(profile);
+        String externalConfigPath = getExternalConfigFullPath(profile);
         System.out.println("Loading external config file from: '" + externalConfigPath + "' ...");
 
 
@@ -37,7 +37,11 @@ public class ExternalConfigLoader {
             if (externalConfig == null || externalConfig.size() == 0) {
             	throw new NullPointerException("External config file seems to have null or no data");
             }
-            
+
+            externalConfig = flattenYamlData(externalConfig);
+            externalConfig.remove("jwtToken.privateKey");
+            externalConfig.remove("jwtToken.publicKey");
+            // System.out.println("externalConfig:" + externalConfig);
        
             return externalConfig;
         } catch (Exception e) {
@@ -47,32 +51,33 @@ public class ExternalConfigLoader {
     }
 
 
-    private static String getExternalConfigPath(Profile profile) {
-        String externalConfigPath = (String) profile.getProperty("external.config.path", "");
-        if (externalConfigPath.isEmpty()) {
+    private static String getExternalConfigFullPath(Profile profile) {
+        String env = profile.getEnvironmentName();
+
+        String basePath = profile.getProperty("external.config.basePath", "");
+        if (basePath.isEmpty()) {
             throw new IllegalStateException("External config path is not specified.");
         }
         
-        String externalConfigFilename = (String) profile.getProperty("external.config.filename", "");
-        if (externalConfigFilename.isEmpty()) {
+        String fileName = profile.getProperty("external.config.filename", "");
+        if (fileName == null) {
             throw new IllegalStateException("External config filename is not specified.");
         }
 
 
-        String env = profile.getEnvironmentName();
         if (env == null || env.isEmpty() || env.equalsIgnoreCase(Constants.Environment.DEV)) {
             // do nothing
         }else if (env.equalsIgnoreCase(Constants.Environment.QC)){
-            externalConfigPath = externalConfigPath + "\\" + Constants.Environment.QC;
+            basePath = basePath + "\\" + Constants.Environment.QC;
         }else {
-            externalConfigPath = externalConfigPath + "\\" + env + "\\" + Sprint.VERSION;
+            basePath = basePath + "\\" + env + "\\" + Sprint.VERSION;
         }
 
-        return externalConfigPath + "\\" + externalConfigFilename;
+        return basePath + "\\" + fileName.toString();
     }
 	
 	
-//	private void populateMultiValueMap(Map<String, Object> data, String parentKey, MultiValueMap<String, Object> multiValueMap) {
+// 	private void populateMultiValueMap(Map<String, Object> data, String parentKey, MultiValueMap<String, Object> multiValueMap) {
 //        for (Map.Entry<String, Object> entry : data.entrySet()) {
 //            String key = parentKey.isEmpty() ? entry.getKey() : parentKey + "." + entry.getKey();
 //            if (entry.getValue() instanceof Map) {
@@ -82,35 +87,35 @@ public class ExternalConfigLoader {
 //            }
 //        }
 //    }
-//	
-//	
-//    
-//    private Map<String, String> flattenYamlData(Map<String, Object> yamlData) {
-//    	
-//    	try {
-//    		
-//    		Map<String, String> flattenedData = new HashMap<>();
-//            flattenYamlDataRecursively("", yamlData, flattenedData);
-//            return flattenedData;
-//            
-//    	}catch (Exception e) {
-//            throw new RuntimeException("Error encounterd on parsing external configuration file", e);
-//    	}
-//        
-//    }
-//
-//    private void flattenYamlDataRecursively(String prefix, Map<String, Object> yamlData, Map<String, String> flattenedData) throws Exception {
-//    	for (Map.Entry<String, Object> entry : yamlData.entrySet()) {
-//            String key = entry.getKey();
-//            Object value = entry.getValue();
-//
-//            if (value instanceof Map) {
-//                flattenYamlDataRecursively(prefix + key + ".", (Map<String, Object>) value, flattenedData);
-//            } else {
-//                flattenedData.put(prefix + key, value.toString());
-//            }
-//        }
-//    }
+	
+	
+   
+    private static Map<String, Object> flattenYamlData(Map<String, Object> yamlData) {
+
+        try {
+
+            Map<String, Object> flattenedData = new HashMap<>();
+            flattenYamlDataRecursively("", yamlData, flattenedData);
+            return flattenedData;
+
+        }catch (Exception e) {
+            throw new RuntimeException("Error encounterd on parsing external configuration file", e);
+        }
+
+    }
+
+    private static void flattenYamlDataRecursively(String prefix, Map<String, Object> yamlData, Map<String, Object> flattenedData) throws Exception {
+        for (Map.Entry<String, Object> entry : yamlData.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+
+            if (value instanceof Map) {
+                flattenYamlDataRecursively(prefix + key + ".", (Map<String, Object>) value, flattenedData);
+            } else {
+                flattenedData.put(prefix + key, value);
+            }
+        }
+    }
     
 }
 

@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.springframework.web.servlet.ModelAndView;
 
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.servlet.http.HttpServletRequest;
 import vcp.np.cas.utils.Constants.Error;
 
@@ -105,4 +107,38 @@ public class Helper {
 		}
     }
 	
+	
+	public static String getCasPrintLog() {
+		return ""
+		+ "    ____          ___         _ _ _ _ \n"
+		+ "   / ___|        / _ \\       /  _ _ _|\n"
+		+ "  | (           / / \\ \\      \\ (____\n"
+		+ "  | |     --   / /   \\ \\  --  \\____ \\\n"
+		+ "  | (___      /  =====  \\     _ _ _) \\\n"
+		+ "   \\____|    /_/       \\_\\   |_ _ _ _/\n"
+		+ "";
+	}
+
+	public static boolean isValidMailAddress(String email) {
+        try {
+            InternetAddress internetAddress = new InternetAddress(email);
+            internetAddress.validate();
+			return true;
+        } catch (AddressException e) {
+			e.printStackTrace();
+			return false;
+        }
+    }
+
+	public static String generateRandomValue(int limit) {
+		int _limit = (limit != -1)? limit:10;
+
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*_+=-`~";
+        StringBuilder randomStringBuilder = new StringBuilder();
+        for (int i = 0; i < _limit; i++) {
+            int index = (int) (characters.length() * Math.random());
+            randomStringBuilder.append(characters.charAt(index));
+        }
+        return randomStringBuilder.toString();
+    }
 }

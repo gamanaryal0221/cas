@@ -32,6 +32,8 @@ public class CasApplication {
         SpringApplication app = new SpringApplication(CasApplication.class);
         app.setAdditionalProfiles(definedEnvironment);
         app.run(args);
+
+        System.out.println("\n\nCAS is up and running on '" + definedEnvironment + "' environment\n");
 	}
 
 }

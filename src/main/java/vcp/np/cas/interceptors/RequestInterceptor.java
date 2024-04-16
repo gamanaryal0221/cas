@@ -2,25 +2,24 @@ package vcp.np.cas.interceptors;
 
 import java.net.URL;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import vcp.np.cas.domains.ClientService;
+import vcp.np.cas.config.datasource.usermanagement.domains.ClientService;
 import vcp.np.cas.services.CommonService;
 import vcp.np.cas.utils.Constants;
 import vcp.np.cas.utils.Helper;
 
 public class RequestInterceptor implements HandlerInterceptor{
 	
+	@Autowired
+	private CommonService commonService;
 	
-	private final CommonService commonService;
-	
-	
-	public RequestInterceptor(CommonService commonService) {
+	public RequestInterceptor() {
 		super();
-		this.commonService = commonService;
 	}
 
 	@Override

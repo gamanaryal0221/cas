@@ -5,6 +5,16 @@ import java.util.List;
 
 public class Constants {
 	
+	public class DataSource {
+		public class Usermanagement {
+			public final static String ENTITY_MANAGER_FACTORY_BEAN_NAME = "localContainerEntityManagerFactoryBean";
+			public final static String TRANSACTION_MANAGER_BEAN_NAME = "platformTransactionManager";
+			
+			public final static String REPOSITORIES_PACKAGE = "vcp.np.cas.config.datasource.usermanagement.repositories";
+			public final static String DOMAINS_PACKAGE = "vcp.np.cas.config.datasource.usermanagement.domains";
+		}
+		
+	}
 
 	public class Request {
 
@@ -30,20 +40,6 @@ public class Constants {
 			public static String POST = "POST";
 		}
 	}
-	
-	
-	public class Config {
-		public static String JWT_TOKEN = "jwtToken";
-		public static String PRIVATE_KEY = "privateKey";
-		public static String PUBLIC_KEY = "publicKey";
-		public static String EXPIRATION = "expiration";
-		
-		public static String MAIL = "mail";
-		public static String SENDER = "sender";
-		public static String ADDRESS = "address";
-		public static String PASSWORD = "password";
-	}
-	
 	
 	public class Templates {
 		public static String ERROR = "error";
@@ -83,6 +79,7 @@ public class Constants {
 		public static String MAIL_ADDRESS = "mail_address";
 		public static String NUMBER = "number";
 		
+		public static String CLIENT_ID = "clientId";
 		public static String CLIENT_DISPLAY_NAME = "clientDisplayName";
 
 		public static String REQUEST_HOST = "requestHost";

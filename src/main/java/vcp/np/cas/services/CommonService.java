@@ -9,24 +9,19 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import vcp.np.cas.domains.ClientService;
-import vcp.np.cas.domains.ClientServiceTheme;
-import vcp.np.cas.domains.ServiceSettings;
-import vcp.np.cas.domains.UserClientService;
-import vcp.np.cas.repositories.ClientServiceRepository;
-import vcp.np.cas.repositories.ClientServiceThemeRepository;
-import vcp.np.cas.repositories.ServiceSettingsRepository;
-import vcp.np.cas.repositories.UserClientServiceRepository;
-import vcp.np.cas.repositories.UserRepository;
-import vcp.np.cas.repositories.custom.CustomQueries;
+import vcp.np.cas.config.datasource.usermanagement.domains.ClientService;
+import vcp.np.cas.config.datasource.usermanagement.domains.ClientServiceTheme;
+import vcp.np.cas.config.datasource.usermanagement.domains.ServiceSettings;
+import vcp.np.cas.config.datasource.usermanagement.domains.UserClientService;
+import vcp.np.cas.config.datasource.usermanagement.repositories.ClientServiceRepository;
+import vcp.np.cas.config.datasource.usermanagement.repositories.ClientServiceThemeRepository;
+import vcp.np.cas.config.datasource.usermanagement.repositories.ServiceSettingsRepository;
+import vcp.np.cas.config.datasource.usermanagement.repositories.UserClientServiceRepository;
 import vcp.np.cas.utils.Constants;
 
 
 @Service
 public class CommonService {
-	
-	@Autowired
-	public UserRepository userRepository;
 
 	@Autowired
 	public ClientServiceRepository clientServiceRepository;
@@ -41,8 +36,8 @@ public class CommonService {
 	public ServiceSettingsRepository serviceSettingsRepository;
 
 	@Autowired
-	public CustomQueries customQueries;
-	
+	public PlainSqlQueries plainSqlQueries;
+
 	
 	public ClientService getClientServiceDetail(URL url) {
 	    System.out.println("Fetching client-service detail...");
@@ -57,7 +52,7 @@ public class CommonService {
             System.out.println("requestHost: " + requestHost);
 
             Optional<ClientService> optionalClientService = clientServiceRepository.findByRequestHost(requestHost);
-            ClientService clientService = optionalClientService.orElse(null);
+			ClientService clientService = (optionalClientService == null)? null:optionalClientService.get();
         	System.out.println("clientService: " + clientService);
 
             if (clientService == null) {
@@ -85,7 +80,7 @@ public class CommonService {
             System.out.println("requestHost: " + requestHost);
 
             Optional<ClientService> optionalClientService = clientServiceRepository.findByRequestHost(requestHost);
-            ClientService clientService = optionalClientService.orElse(null);
+            ClientService clientService = (optionalClientService == null)? null:optionalClientService.get();
         	System.out.println("clientService: " + clientService);
 
             if (clientService == null) {
@@ -109,8 +104,7 @@ public class CommonService {
 		
 		if (clientId != null && serviceId != null) {
 			
-			List<ClientServiceTheme> clientServiceThemeList = clientServiceThemeRepository.findAllByClientId(clientId);
-			
+			List<ClientServiceTheme> clientServiceThemeList = clientServiceThemeRepository.findAllByClientId(clientId);			
 			if (clientServiceThemeList != null && !clientServiceThemeList.isEmpty()) {
 				
 				Optional<ClientServiceTheme> optionalClientServiceTheme = clientServiceThemeList.stream()
@@ -173,7 +167,7 @@ public class CommonService {
 		try {
 
 			Optional<UserClientService> optionalUserClientService = userClientServiceRepository.findByUserIdAndClientServiceId(userId, clientServiceId);
-			UserClientService userClientService = optionalUserClientService.orElse(null);
+			UserClientService userClientService = (optionalUserClientService == null)? null:optionalUserClientService.get();
 			
 	    	System.out.println("Does user[id" + userId + "] have access on client-service[id:" + clientServiceId + "]?\n >> " + (userClientService != null));
 	    	return userClientService;
@@ -192,28 +186,20 @@ public class CommonService {
             return null;
 		}
 		
-		try {
-
-			Long userClientServiceId = customQueries.getUserClientServiceByCredential(username, clientServiceId);
-			if (userClientServiceId == null) {
-                System.out.println("Did not get userClientServiceId from getUserClientServiceByCredential");
-				return null;
-			}
-			
-			Optional<UserClientService> optionalUserClientService = userClientServiceRepository.findById(userClientServiceId);
-			UserClientService userClientService = optionalUserClientService.orElse(null);
-            if (userClientService == null) {
-                System.out.println("Could not find userClientServiceId:" + userClientServiceId + " on db");
-                return null;
-            }
-            
-            return userClientService;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error occurred in getUserClientServiceByCredential: " + e.getMessage());
-            return null;
-        }
+		Long userClientServiceId = plainSqlQueries.getUserClientServiceIdByCredential(username, clientServiceId);
+		if (userClientServiceId == null) {
+			System.out.println("Did not get userClientServiceId from getUserClientServiceByCredential");
+			return null;
+		}
+		
+		Optional<UserClientService> optionalUserClientService = userClientServiceRepository.findById(userClientServiceId);
+		UserClientService userClientService = (optionalUserClientService == null)? null:optionalUserClientService.get();
+		if (userClientService == null) {
+			System.out.println("Could not find userClientServiceId:" + userClientServiceId + " on db");
+			return null;
+		}
+		
+		return userClientService;
 		
 	}
 
@@ -228,13 +214,13 @@ public class CommonService {
 		try {
 
 			Optional<ServiceSettings> optionalServiceSettings = serviceSettingsRepository.findByServiceId(serviceId);
-			ServiceSettings serviceSettings = optionalServiceSettings.orElse(null);
+			ServiceSettings serviceSettings = (optionalServiceSettings == null)? null:optionalServiceSettings.get();
             if (serviceSettings == null) {
                 System.out.println("Could not find settings of service[id:" + serviceId + "]");
                 return "";
             }
 
-        	String loginSuccessPath = serviceSettings.getLoginSuccessPath();
+        	String loginSuccessPath = serviceSettings.getLoginSuccessUri();
         	System.out.println("loginSuccessPath: " + loginSuccessPath);
             
             return (loginSuccessPath == null || loginSuccessPath.isEmpty())? "":loginSuccessPath;
