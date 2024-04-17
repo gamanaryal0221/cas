@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import vcp.np.cas.config.datasource.usermanagement.domains.UserClientService;
+import vcp.np.datasource.usermanagement.domains.UserClientService;
 import vcp.np.cas.services.AuthenticationService;
 import vcp.np.cas.services.CommonService;
 import vcp.np.cas.services.PlainSqlQueries;

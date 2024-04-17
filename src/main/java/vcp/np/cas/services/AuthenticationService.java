@@ -6,7 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import vcp.np.cas.config.datasource.usermanagement.domains.User;
+import vcp.np.datasource.usermanagement.domains.User;
 import vcp.np.cas.utils.Helper;
 
 @Service

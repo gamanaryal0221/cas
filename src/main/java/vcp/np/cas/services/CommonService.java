@@ -9,14 +9,14 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import vcp.np.cas.config.datasource.usermanagement.domains.ClientService;
-import vcp.np.cas.config.datasource.usermanagement.domains.ClientServiceTheme;
-import vcp.np.cas.config.datasource.usermanagement.domains.ServiceSettings;
-import vcp.np.cas.config.datasource.usermanagement.domains.UserClientService;
-import vcp.np.cas.config.datasource.usermanagement.repositories.ClientServiceRepository;
-import vcp.np.cas.config.datasource.usermanagement.repositories.ClientServiceThemeRepository;
-import vcp.np.cas.config.datasource.usermanagement.repositories.ServiceSettingsRepository;
-import vcp.np.cas.config.datasource.usermanagement.repositories.UserClientServiceRepository;
+import vcp.np.datasource.usermanagement.domains.ClientService;
+import vcp.np.datasource.usermanagement.domains.ClientServiceTheme;
+import vcp.np.datasource.usermanagement.domains.ServiceSettings;
+import vcp.np.datasource.usermanagement.domains.UserClientService;
+import vcp.np.datasource.usermanagement.repositories.ClientServiceRepository;
+import vcp.np.datasource.usermanagement.repositories.ClientServiceThemeRepository;
+import vcp.np.datasource.usermanagement.repositories.ServiceSettingsRepository;
+import vcp.np.datasource.usermanagement.repositories.UserClientServiceRepository;
 import vcp.np.cas.utils.Constants;
 
 

@@ -10,8 +10,8 @@ public class Constants {
 			public final static String ENTITY_MANAGER_FACTORY_BEAN_NAME = "localContainerEntityManagerFactoryBean";
 			public final static String TRANSACTION_MANAGER_BEAN_NAME = "platformTransactionManager";
 			
-			public final static String REPOSITORIES_PACKAGE = "vcp.np.cas.config.datasource.usermanagement.repositories";
-			public final static String DOMAINS_PACKAGE = "vcp.np.cas.config.datasource.usermanagement.domains";
+			public final static String REPOSITORIES_PACKAGE = "vcp.np.datasource.usermanagement.repositories";
+			public final static String DOMAINS_PACKAGE = "vcp.np.datasource.usermanagement.domains";
 		}
 		
 	}

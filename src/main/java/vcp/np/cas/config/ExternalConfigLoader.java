@@ -32,7 +32,6 @@ public class ExternalConfigLoader {
         	
             Yaml yaml = new Yaml();
             Map<String, Object> externalConfig = yaml.load(inputStream);
-            // System.out.println("yamlData:" + externalConfig);
 
             if (externalConfig == null || externalConfig.size() == 0) {
             	throw new NullPointerException("External config file seems to have null or no data");
@@ -75,20 +74,6 @@ public class ExternalConfigLoader {
 
         return basePath + "\\" + fileName.toString();
     }
-	
-	
-// 	private void populateMultiValueMap(Map<String, Object> data, String parentKey, MultiValueMap<String, Object> multiValueMap) {
-//        for (Map.Entry<String, Object> entry : data.entrySet()) {
-//            String key = parentKey.isEmpty() ? entry.getKey() : parentKey + "." + entry.getKey();
-//            if (entry.getValue() instanceof Map) {
-//                populateMultiValueMap((Map<String, Object>) entry.getValue(), key, multiValueMap);
-//            } else {
-//                multiValueMap.add(key, entry.getValue());
-//            }
-//        }
-//    }
-	
-	
    
     private static Map<String, Object> flattenYamlData(Map<String, Object> yamlData) {
 

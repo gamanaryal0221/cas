@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import vcp.np.cas.cas.password.PasswordService;
-import vcp.np.cas.config.datasource.usermanagement.domains.ClientService;
+import vcp.np.datasource.usermanagement.domains.ClientService;
 import vcp.np.cas.services.CommonService;
 import vcp.np.cas.services.JwtTokenService;
 import vcp.np.cas.utils.Constants;

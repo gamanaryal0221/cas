@@ -11,7 +11,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
-import vcp.np.cas.config.datasource.usermanagement.domains.User;
+import vcp.np.datasource.usermanagement.domains.User;
 import vcp.np.cas.services.AuthenticationService.PasswordDetails;
 
 @Repository

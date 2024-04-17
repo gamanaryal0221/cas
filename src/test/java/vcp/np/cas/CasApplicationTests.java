@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import vcp.np.cas.config.datasource.usermanagement.domains.User;
-import vcp.np.cas.config.datasource.usermanagement.repositories.UserRepository;
+import vcp.np.datasource.usermanagement.domains.User;
+import vcp.np.datasource.usermanagement.repositories.UserRepository;
 
 @SpringBootTest
 class CasApplicationTests {

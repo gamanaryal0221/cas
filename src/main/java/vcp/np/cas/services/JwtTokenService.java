@@ -1,6 +1,5 @@
 package vcp.np.cas.services;
 
-import java.io.Serializable;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -18,13 +17,13 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import vcp.np.cas.config.datasource.usermanagement.domains.User;
-import vcp.np.cas.config.datasource.usermanagement.domains.UserClientService;
 import vcp.np.cas.utils.Constants;
 import vcp.np.cas.utils.Constants.JwtToken;
 import vcp.np.cas.utils.Helper;
 import vcp.np.cas.utils.StringUtils;
 import vcp.np.cas.utils.enums.JwtTokenPurpose;
+import vcp.np.datasource.usermanagement.domains.User;
+import vcp.np.datasource.usermanagement.domains.UserClientService;
 
 
 public class JwtTokenService {

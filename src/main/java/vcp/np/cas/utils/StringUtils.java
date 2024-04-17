@@ -4,7 +4,7 @@ import java.util.List;
 
 public class StringUtils {
 
-	public static String listToString(List list, String delimeter) {
+	public static String listToString(List<?> list, String delimeter) {
         delimeter = (delimeter != null && !delimeter.isEmpty())? delimeter:",";
 
         String str = "";
